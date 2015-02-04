@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.eclat;
+package be.uantwerpen.adrem.eclat;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static ua.ac.be.fpm.util.FIMOptions.MIN_SUP_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -29,10 +29,10 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import ua.ac.be.fpm.eclat.util.Item;
-import ua.ac.be.fpm.eclat.util.SetReporter;
-import ua.ac.be.fpm.hadoop.util.IntArrayWritable;
-import ua.ac.be.fpm.hadoop.util.IntMatrixWritable;
+import be.uantwerpen.adrem.eclat.util.Item;
+import be.uantwerpen.adrem.eclat.util.SetReporter;
+import be.uantwerpen.adrem.hadoop.util.IntArrayWritable;
+import be.uantwerpen.adrem.hadoop.util.IntMatrixWritable;
 
 /**
  * MapperBase class for the Eclat phase of BigFIM and DistEclat. This mapper mines the frequent itemsets for the

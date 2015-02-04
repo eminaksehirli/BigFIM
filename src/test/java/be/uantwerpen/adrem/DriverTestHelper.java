@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm;
+package be.uantwerpen.adrem;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
-import ua.ac.be.fpm.eclat.util.TrieDumper;
+import be.uantwerpen.adrem.eclat.util.TrieDumper;
 
 public class DriverTestHelper {
   

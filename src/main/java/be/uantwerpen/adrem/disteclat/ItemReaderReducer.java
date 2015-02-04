@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.disteclat;
+package be.uantwerpen.adrem.disteclat;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.lang.Integer.parseInt;
-import static ua.ac.be.fpm.disteclat.DistEclatDriver.OSingletonsDistribution;
-import static ua.ac.be.fpm.disteclat.DistEclatDriver.OSingletonsOrder;
-import static ua.ac.be.fpm.disteclat.DistEclatDriver.OSingletonsTids;
-import static ua.ac.be.fpm.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
+import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsDistribution;
+import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsOrder;
+import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsTids;
+import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -40,8 +40,8 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
-import ua.ac.be.fpm.hadoop.util.IntArrayWritable;
-import ua.ac.be.fpm.hadoop.util.IntMatrixWritable;
+import be.uantwerpen.adrem.hadoop.util.IntArrayWritable;
+import be.uantwerpen.adrem.hadoop.util.IntMatrixWritable;
 
 /**
  * Reducer for the first cycle for DistEclat. It receives the complete set of frequent singletons from the different

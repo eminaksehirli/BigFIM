@@ -1,6 +1,6 @@
-package ua.ac.be.fpm.disteclat;
+package be.uantwerpen.adrem.disteclat;
 
-import ua.ac.be.fpm.disteclat.DistEclatDriver;
+import be.uantwerpen.adrem.disteclat.DistEclatDriver;
 
 
 public class DistEclatRetailTest_ extends RetailTest_ {

@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.eclat.util;
+package be.uantwerpen.adrem.eclat.util;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import ua.ac.be.fpm.eclat.util.Item;
-import ua.ac.be.fpm.eclat.util.TidList;
+import be.uantwerpen.adrem.eclat.util.Item;
+import be.uantwerpen.adrem.eclat.util.TidList;
 
 public class ItemTest {
   

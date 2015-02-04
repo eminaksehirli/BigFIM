@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.eclat;
+package be.uantwerpen.adrem.eclat;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
 import static java.util.Arrays.copyOf;
-import static ua.ac.be.fpm.util.Tools.setDifference;
+import static be.uantwerpen.adrem.util.Tools.setDifference;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,9 +27,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import ua.ac.be.fpm.eclat.util.Item;
-import ua.ac.be.fpm.eclat.util.SetReporter;
-import ua.ac.be.fpm.eclat.util.TidList;
+import be.uantwerpen.adrem.eclat.util.Item;
+import be.uantwerpen.adrem.eclat.util.SetReporter;
+import be.uantwerpen.adrem.eclat.util.TidList;
 
 import com.google.common.primitives.Ints;
 

@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.bigfim;
+package be.uantwerpen.adrem.bigfim;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static org.apache.hadoop.filecache.DistributedCache.getLocalCacheFiles;
-import static ua.ac.be.fpm.bigfim.Tools.convertLineToSet;
-import static ua.ac.be.fpm.bigfim.Tools.createCandidates;
-import static ua.ac.be.fpm.bigfim.Tools.getSingletonsFromSets;
-import static ua.ac.be.fpm.bigfim.Tools.readItemsetsFromFile;
-import static ua.ac.be.fpm.util.FIMOptions.DELIMITER_KEY;
+import static be.uantwerpen.adrem.bigfim.Tools.convertLineToSet;
+import static be.uantwerpen.adrem.bigfim.Tools.createCandidates;
+import static be.uantwerpen.adrem.bigfim.Tools.getSingletonsFromSets;
+import static be.uantwerpen.adrem.bigfim.Tools.readItemsetsFromFile;
+import static be.uantwerpen.adrem.util.FIMOptions.DELIMITER_KEY;
 
 import java.io.IOException;
 import java.util.Collection;

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.eclat.util;
+package be.uantwerpen.adrem.eclat.util;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -25,7 +25,7 @@ import java.io.PrintStream;
 import org.junit.Before;
 import org.junit.Test;
 
-import ua.ac.be.fpm.eclat.util.TrieDumper;
+import be.uantwerpen.adrem.eclat.util.TrieDumper;
 
 public class TrieDumperTest {
   

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.bigfim;
+package be.uantwerpen.adrem.bigfim;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static org.easymock.EasyMock.createMock;
@@ -27,11 +27,11 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import ua.ac.be.fpm.FIMTestCase;
-import ua.ac.be.fpm.bigfim.ComputeTidListMapper;
-import ua.ac.be.fpm.bigfim.ComputeTidListMapper.Trie;
-import ua.ac.be.fpm.hadoop.util.IntArrayWritable;
-import ua.ac.be.fpm.hadoop.util.IntMatrixWritable;
+import be.uantwerpen.adrem.FIMTestCase;
+import be.uantwerpen.adrem.bigfim.ComputeTidListMapper;
+import be.uantwerpen.adrem.bigfim.ComputeTidListMapper.Trie;
+import be.uantwerpen.adrem.hadoop.util.IntArrayWritable;
+import be.uantwerpen.adrem.hadoop.util.IntMatrixWritable;
 
 public class ComputeTidListMapperTest extends FIMTestCase {
   

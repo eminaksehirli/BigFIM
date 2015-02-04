@@ -14,17 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.disteclat;
+package be.uantwerpen.adrem.disteclat;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.lang.Integer.parseInt;
 import static java.lang.Integer.valueOf;
 import static org.apache.hadoop.filecache.DistributedCache.getLocalCacheFiles;
-import static ua.ac.be.fpm.disteclat.DistEclatDriver.OSingletonsOrder;
-import static ua.ac.be.fpm.disteclat.DistEclatDriver.OSingletonsTids;
-import static ua.ac.be.fpm.util.FIMOptions.MIN_SUP_KEY;
-import static ua.ac.be.fpm.util.FIMOptions.PREFIX_LENGTH_KEY;
+import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsOrder;
+import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsTids;
+import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.PREFIX_LENGTH_KEY;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -45,11 +45,11 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import ua.ac.be.fpm.eclat.EclatMiner;
-import ua.ac.be.fpm.eclat.util.Item;
-import ua.ac.be.fpm.eclat.util.PrefixItemTIDsReporter;
-import ua.ac.be.fpm.eclat.util.SetReporter;
-import ua.ac.be.fpm.hadoop.util.IntMatrixWritable;
+import be.uantwerpen.adrem.eclat.EclatMiner;
+import be.uantwerpen.adrem.eclat.util.Item;
+import be.uantwerpen.adrem.eclat.util.PrefixItemTIDsReporter;
+import be.uantwerpen.adrem.eclat.util.SetReporter;
+import be.uantwerpen.adrem.hadoop.util.IntMatrixWritable;
 
 /**
  * Mapper class for the second cycle of DistEclat. It receives a list of singletons for which it has to create X-FIs

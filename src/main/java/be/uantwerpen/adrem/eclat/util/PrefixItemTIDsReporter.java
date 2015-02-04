@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.eclat.util;
+package be.uantwerpen.adrem.eclat.util;
 
-import static ua.ac.be.fpm.util.Tools.intersect;
+import static be.uantwerpen.adrem.util.Tools.intersect;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,8 +25,8 @@ import java.util.Map;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 
-import ua.ac.be.fpm.hadoop.util.IntArrayWritable;
-import ua.ac.be.fpm.hadoop.util.IntMatrixWritable;
+import be.uantwerpen.adrem.hadoop.util.IntArrayWritable;
+import be.uantwerpen.adrem.hadoop.util.IntMatrixWritable;
 
 /**
  * Implementation of a Set Reporter that writes an itemset to the output by it's prefix, the extension and the tids. The

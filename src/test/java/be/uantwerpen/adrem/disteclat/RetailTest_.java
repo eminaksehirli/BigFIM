@@ -1,4 +1,4 @@
-package ua.ac.be.fpm.disteclat;
+package be.uantwerpen.adrem.disteclat;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
@@ -11,7 +11,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import ua.ac.be.fpm.DriverTestHelper;
+import be.uantwerpen.adrem.DriverTestHelper;
 
 public abstract class RetailTest_ {
   

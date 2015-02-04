@@ -1,4 +1,4 @@
-package ua.ac.be.fpm;
+package be.uantwerpen.adrem;
 
 import java.io.File;
 import java.io.FileOutputStream;

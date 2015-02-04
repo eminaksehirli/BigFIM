@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.util;
+package be.uantwerpen.adrem.util;
 
 import static org.junit.Assert.assertEquals;
-import static ua.ac.be.fpm.util.Tools.intersect;
-import static ua.ac.be.fpm.util.Tools.setDifference;
+import static be.uantwerpen.adrem.util.Tools.intersect;
+import static be.uantwerpen.adrem.util.Tools.setDifference;
 
 import org.junit.Test;
 
-import ua.ac.be.fpm.eclat.util.TidList;
+import be.uantwerpen.adrem.eclat.util.TidList;
 
 public class ToolsTest {
   

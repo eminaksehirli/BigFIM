@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.eclat;
+package be.uantwerpen.adrem.eclat;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
@@ -24,7 +24,7 @@ import static java.util.Arrays.copyOf;
 import static java.util.Collections.unmodifiableList;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.ac.be.fpm.util.Tools.intersect;
+import static be.uantwerpen.adrem.util.Tools.intersect;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,10 +33,10 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import ua.ac.be.fpm.eclat.EclatMiner;
-import ua.ac.be.fpm.eclat.util.Item;
-import ua.ac.be.fpm.eclat.util.SetReporter;
-import ua.ac.be.fpm.eclat.util.TidList;
+import be.uantwerpen.adrem.eclat.EclatMiner;
+import be.uantwerpen.adrem.eclat.util.Item;
+import be.uantwerpen.adrem.eclat.util.SetReporter;
+import be.uantwerpen.adrem.eclat.util.TidList;
 
 public class EclatMinerTest {
   

@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.eclat;
+package be.uantwerpen.adrem.eclat;
 
 import org.apache.hadoop.io.Text;
 
-import ua.ac.be.fpm.eclat.util.SetReporter;
-import ua.ac.be.fpm.eclat.util.TreeStringReporter;
+import be.uantwerpen.adrem.eclat.util.SetReporter;
+import be.uantwerpen.adrem.eclat.util.TreeStringReporter;
 
 /**
  * Mapper class for the Eclat phase of BigFIM and DistEclat. This mapper mines the frequent itemsets for the specified

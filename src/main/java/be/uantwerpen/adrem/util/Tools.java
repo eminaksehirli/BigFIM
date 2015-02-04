@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.util;
+package be.uantwerpen.adrem.util;
 
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.List;
 
-import ua.ac.be.fpm.eclat.util.TidList;
+import be.uantwerpen.adrem.eclat.util.TidList;
 
 /**
  * Some extra utility functions for FPM algorithms

@@ -14,21 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.disteclat;
+package be.uantwerpen.adrem.disteclat;
 
 import static java.io.File.separator;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.hadoop.filecache.DistributedCache.addCacheFile;
 import static org.apache.hadoop.mapreduce.lib.input.FileInputFormat.setInputPaths;
 import static org.apache.hadoop.mapreduce.lib.output.MultipleOutputs.addNamedOutput;
-import static ua.ac.be.fpm.hadoop.util.SplitByKTextInputFormat.NUMBER_OF_CHUNKS;
-import static ua.ac.be.fpm.hadoop.util.Tools.cleanDirs;
-import static ua.ac.be.fpm.hadoop.util.Tools.prepareJob;
-import static ua.ac.be.fpm.util.FIMOptions.DELIMITER_KEY;
-import static ua.ac.be.fpm.util.FIMOptions.MIN_SUP_KEY;
-import static ua.ac.be.fpm.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
-import static ua.ac.be.fpm.util.FIMOptions.OUTPUT_DIR_KEY;
-import static ua.ac.be.fpm.util.FIMOptions.PREFIX_LENGTH_KEY;
+import static be.uantwerpen.adrem.hadoop.util.SplitByKTextInputFormat.NUMBER_OF_CHUNKS;
+import static be.uantwerpen.adrem.hadoop.util.Tools.cleanDirs;
+import static be.uantwerpen.adrem.hadoop.util.Tools.prepareJob;
+import static be.uantwerpen.adrem.util.FIMOptions.DELIMITER_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.OUTPUT_DIR_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.PREFIX_LENGTH_KEY;
 
 import java.io.IOException;
 import java.net.URI;
@@ -50,14 +50,14 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import ua.ac.be.fpm.bigfim.ComputeTidListMapper;
-import ua.ac.be.fpm.eclat.EclatMinerMapper;
-import ua.ac.be.fpm.eclat.EclatMinerReducer;
-import ua.ac.be.fpm.hadoop.util.IntArrayWritable;
-import ua.ac.be.fpm.hadoop.util.IntMatrixWritable;
-import ua.ac.be.fpm.hadoop.util.NoSplitSequenceFileInputFormat;
-import ua.ac.be.fpm.hadoop.util.SplitByKTextInputFormat;
-import ua.ac.be.fpm.util.FIMOptions;
+import be.uantwerpen.adrem.bigfim.ComputeTidListMapper;
+import be.uantwerpen.adrem.eclat.EclatMinerMapper;
+import be.uantwerpen.adrem.eclat.EclatMinerReducer;
+import be.uantwerpen.adrem.hadoop.util.IntArrayWritable;
+import be.uantwerpen.adrem.hadoop.util.IntMatrixWritable;
+import be.uantwerpen.adrem.hadoop.util.NoSplitSequenceFileInputFormat;
+import be.uantwerpen.adrem.hadoop.util.SplitByKTextInputFormat;
+import be.uantwerpen.adrem.util.FIMOptions;
 
 /**
  * Driver class for DistEclat (distributed Eclat) implementation on the Hadoop framework. DistEclat operates in three

@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.eclat.util;
+package be.uantwerpen.adrem.eclat.util;
 
-import static ua.ac.be.fpm.eclat.util.TrieDumper.CLOSESUP;
-import static ua.ac.be.fpm.eclat.util.TrieDumper.OPENSUP;
-import static ua.ac.be.fpm.eclat.util.TrieDumper.SEPARATOR;
-import static ua.ac.be.fpm.eclat.util.TrieDumper.SYMBOL;
+import static be.uantwerpen.adrem.eclat.util.TrieDumper.CLOSESUP;
+import static be.uantwerpen.adrem.eclat.util.TrieDumper.OPENSUP;
+import static be.uantwerpen.adrem.eclat.util.TrieDumper.SEPARATOR;
+import static be.uantwerpen.adrem.eclat.util.TrieDumper.SYMBOL;
 
 import java.io.IOException;
 import java.util.Arrays;

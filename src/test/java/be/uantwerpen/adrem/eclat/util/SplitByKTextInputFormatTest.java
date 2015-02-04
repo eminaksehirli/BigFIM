@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.eclat.util;
+package be.uantwerpen.adrem.eclat.util;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static ua.ac.be.fpm.util.FIMOptions.NUMBER_OF_LINES_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_LINES_KEY;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -38,7 +38,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import ua.ac.be.fpm.hadoop.util.SplitByKTextInputFormat;
+import be.uantwerpen.adrem.hadoop.util.SplitByKTextInputFormat;
 
 public class SplitByKTextInputFormatTest {
   

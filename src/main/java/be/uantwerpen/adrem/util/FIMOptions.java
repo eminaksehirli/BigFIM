@@ -1,4 +1,4 @@
-package ua.ac.be.fpm.util;
+package be.uantwerpen.adrem.util;
 
 public class FIMOptions {
   

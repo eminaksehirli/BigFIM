@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm;
+package be.uantwerpen.adrem;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-@SuiteClasses({ua.ac.be.fpm.bigfim.BigFIMDriverTest_.class,
-    ua.ac.be.fpm.disteclat.DistEclatDriverTest_.class})
+@SuiteClasses({be.uantwerpen.adrem.bigfim.BigFIMDriverTest_.class,
+    be.uantwerpen.adrem.disteclat.DistEclatDriverTest_.class})
 public class FPMDriversTest {
   // this code block is intentionally left blank.
 }

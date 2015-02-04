@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.bigfim;
+package be.uantwerpen.adrem.bigfim;
 
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
 import static com.google.common.collect.Maps.newHashMap;
-import static ua.ac.be.fpm.hadoop.util.IntArrayWritable.EmptyIaw;
-import static ua.ac.be.fpm.hadoop.util.IntMatrixWritable.EmptyImw;
-import static ua.ac.be.fpm.util.FIMOptions.MIN_SUP_KEY;
-import static ua.ac.be.fpm.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
+import static be.uantwerpen.adrem.hadoop.util.IntArrayWritable.EmptyIaw;
+import static be.uantwerpen.adrem.hadoop.util.IntMatrixWritable.EmptyImw;
+import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -38,8 +38,8 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
-import ua.ac.be.fpm.hadoop.util.IntArrayWritable;
-import ua.ac.be.fpm.hadoop.util.IntMatrixWritable;
+import be.uantwerpen.adrem.hadoop.util.IntArrayWritable;
+import be.uantwerpen.adrem.hadoop.util.IntMatrixWritable;
 
 /**
  * Reducer for the second phase of BigFIM. This reducer combines partial tid lists received from different mappers for a

@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.bigfim;
+package be.uantwerpen.adrem.bigfim;
 
-import static ua.ac.be.fpm.DriverTestHelper.Data;
-import static ua.ac.be.fpm.DriverTestHelper.MinSup;
-import static ua.ac.be.fpm.DriverTestHelper.readResults;
+import static be.uantwerpen.adrem.DriverTestHelper.Data;
+import static be.uantwerpen.adrem.DriverTestHelper.MinSup;
+import static be.uantwerpen.adrem.DriverTestHelper.readResults;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,10 +29,10 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import ua.ac.be.fpm.DriverTestHelper;
-import ua.ac.be.fpm.FIMTestCase;
-import ua.ac.be.fpm.bigfim.BigFIMDriver;
-import ua.ac.be.fpm.bigfim.ComputeTidListReducer;
+import be.uantwerpen.adrem.DriverTestHelper;
+import be.uantwerpen.adrem.FIMTestCase;
+import be.uantwerpen.adrem.bigfim.BigFIMDriver;
+import be.uantwerpen.adrem.bigfim.ComputeTidListReducer;
 
 public class BigFIMDriverTest_ extends FIMTestCase {
   private static boolean bigFIMHasRun = false;

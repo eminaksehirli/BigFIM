@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.bigfim;
+package be.uantwerpen.adrem.bigfim;
 
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
 import static org.easymock.EasyMock.createMock;
@@ -30,9 +30,9 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import ua.ac.be.fpm.FIMTestCase;
-import ua.ac.be.fpm.bigfim.AprioriPhaseReducer;
-import ua.ac.be.fpm.bigfim.ComputeTidListReducer;
+import be.uantwerpen.adrem.FIMTestCase;
+import be.uantwerpen.adrem.bigfim.AprioriPhaseReducer;
+import be.uantwerpen.adrem.bigfim.ComputeTidListReducer;
 
 public class AprioriPhaseReducerTest extends FIMTestCase {
   

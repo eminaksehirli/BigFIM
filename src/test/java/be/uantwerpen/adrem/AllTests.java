@@ -14,22 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm;
+package be.uantwerpen.adrem;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-import ua.ac.be.fpm.bigfim.AprioriPhaseMapperTest;
-import ua.ac.be.fpm.bigfim.AprioriPhaseReducerTest;
-import ua.ac.be.fpm.bigfim.ComputeTidListMapperTest;
-import ua.ac.be.fpm.bigfim.ComputeTidListReducerTest;
-import ua.ac.be.fpm.eclat.EclatMinerTest;
-import ua.ac.be.fpm.eclat.util.ItemTest;
-import ua.ac.be.fpm.eclat.util.SplitByKTextInputFormatTest;
-import ua.ac.be.fpm.eclat.util.TrieDumperTest;
-import ua.ac.be.fpm.util.DbTransposerTest;
-import ua.ac.be.fpm.util.ToolsTest;
+import be.uantwerpen.adrem.bigfim.AprioriPhaseMapperTest;
+import be.uantwerpen.adrem.bigfim.AprioriPhaseReducerTest;
+import be.uantwerpen.adrem.bigfim.ComputeTidListMapperTest;
+import be.uantwerpen.adrem.bigfim.ComputeTidListReducerTest;
+import be.uantwerpen.adrem.eclat.EclatMinerTest;
+import be.uantwerpen.adrem.eclat.util.ItemTest;
+import be.uantwerpen.adrem.eclat.util.SplitByKTextInputFormatTest;
+import be.uantwerpen.adrem.eclat.util.TrieDumperTest;
+import be.uantwerpen.adrem.util.DbTransposerTest;
+import be.uantwerpen.adrem.util.ToolsTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({FPMDriversTest.class, AprioriPhaseMapperTest.class, AprioriPhaseReducerTest.class,

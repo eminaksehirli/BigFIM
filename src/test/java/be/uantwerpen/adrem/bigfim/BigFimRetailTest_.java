@@ -1,12 +1,12 @@
-package ua.ac.be.fpm.bigfim;
+package be.uantwerpen.adrem.bigfim;
 
 import java.io.FileNotFoundException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import ua.ac.be.fpm.bigfim.BigFIMDriver;
-import ua.ac.be.fpm.disteclat.RetailTest_;
+import be.uantwerpen.adrem.bigfim.BigFIMDriver;
+import be.uantwerpen.adrem.disteclat.RetailTest_;
 
 public class BigFimRetailTest_ extends RetailTest_ {
   

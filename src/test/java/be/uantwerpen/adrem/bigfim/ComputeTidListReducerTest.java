@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.bigfim;
+package be.uantwerpen.adrem.bigfim;
 
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
 import static org.easymock.EasyMock.createMock;
-import static ua.ac.be.fpm.bigfim.ComputeTidListMapperTest.newIAW;
-import static ua.ac.be.fpm.hadoop.util.IntArrayWritable.EmptyIaw;
-import static ua.ac.be.fpm.hadoop.util.IntMatrixWritable.EmptyImw;
-import static ua.ac.be.fpm.util.FIMOptions.MIN_SUP_KEY;
-import static ua.ac.be.fpm.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
-import static ua.ac.be.fpm.util.FIMOptions.SUBDB_SIZE;
+import static be.uantwerpen.adrem.bigfim.ComputeTidListMapperTest.newIAW;
+import static be.uantwerpen.adrem.hadoop.util.IntArrayWritable.EmptyIaw;
+import static be.uantwerpen.adrem.hadoop.util.IntMatrixWritable.EmptyImw;
+import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.SUBDB_SIZE;
 
 import java.util.List;
 
@@ -35,10 +35,10 @@ import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import ua.ac.be.fpm.FIMTestCase;
-import ua.ac.be.fpm.bigfim.ComputeTidListReducer;
-import ua.ac.be.fpm.hadoop.util.IntArrayWritable;
-import ua.ac.be.fpm.hadoop.util.IntMatrixWritable;
+import be.uantwerpen.adrem.FIMTestCase;
+import be.uantwerpen.adrem.bigfim.ComputeTidListReducer;
+import be.uantwerpen.adrem.hadoop.util.IntArrayWritable;
+import be.uantwerpen.adrem.hadoop.util.IntMatrixWritable;
 
 public class ComputeTidListReducerTest extends FIMTestCase {
   

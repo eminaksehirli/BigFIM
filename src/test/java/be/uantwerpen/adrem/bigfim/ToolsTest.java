@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.bigfim;
+package be.uantwerpen.adrem.bigfim;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
@@ -23,11 +23,11 @@ import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.collect.Sets.newTreeSet;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static ua.ac.be.fpm.bigfim.Tools.ItemDelimiter;
-import static ua.ac.be.fpm.bigfim.Tools.convertLineToSet;
-import static ua.ac.be.fpm.bigfim.Tools.createCandidates;
-import static ua.ac.be.fpm.bigfim.Tools.getSingletonsFromSets;
-import static ua.ac.be.fpm.bigfim.Tools.readItemsetsFromFile;
+import static be.uantwerpen.adrem.bigfim.Tools.ItemDelimiter;
+import static be.uantwerpen.adrem.bigfim.Tools.convertLineToSet;
+import static be.uantwerpen.adrem.bigfim.Tools.createCandidates;
+import static be.uantwerpen.adrem.bigfim.Tools.getSingletonsFromSets;
+import static be.uantwerpen.adrem.bigfim.Tools.readItemsetsFromFile;
 
 import java.io.BufferedWriter;
 import java.io.File;

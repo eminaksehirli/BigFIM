@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.bigfim;
+package be.uantwerpen.adrem.bigfim;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static org.easymock.EasyMock.createMock;
@@ -28,9 +28,9 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.easymock.EasyMock;
 import org.junit.Test;
 
-import ua.ac.be.fpm.FIMTestCase;
-import ua.ac.be.fpm.bigfim.AprioriPhaseMapper;
-import ua.ac.be.fpm.bigfim.AprioriPhaseMapper.Trie;
+import be.uantwerpen.adrem.FIMTestCase;
+import be.uantwerpen.adrem.bigfim.AprioriPhaseMapper;
+import be.uantwerpen.adrem.bigfim.AprioriPhaseMapper.Trie;
 
 public class AprioriPhaseMapperTest extends FIMTestCase {
   

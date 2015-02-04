@@ -1,4 +1,4 @@
-package ua.ac.be.fpm.eclat.util;
+package be.uantwerpen.adrem.eclat.util;
 
 import java.util.Arrays;
 

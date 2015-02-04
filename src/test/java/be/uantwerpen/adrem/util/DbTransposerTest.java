@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.util;
+package be.uantwerpen.adrem.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -28,7 +28,7 @@ import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
 
-import ua.ac.be.fpm.util.DbTransposer;
+import be.uantwerpen.adrem.util.DbTransposer;
 
 public class DbTransposerTest {
   

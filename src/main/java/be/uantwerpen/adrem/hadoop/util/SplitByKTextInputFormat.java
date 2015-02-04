@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ua.ac.be.fpm.hadoop.util;
+package be.uantwerpen.adrem.hadoop.util;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static ua.ac.be.fpm.util.FIMOptions.NUMBER_OF_LINES_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_LINES_KEY;
 
 import java.io.IOException;
 import java.util.List;
