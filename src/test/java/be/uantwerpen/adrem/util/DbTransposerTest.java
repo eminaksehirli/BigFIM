@@ -118,7 +118,7 @@ public class DbTransposerTest {
     ps.println("File exists, aborting!");
     
     EasyMock.replay(ps);
-    
+    PrintStream origOut = System.out;
     System.setOut(ps);
     
     File in = File.createTempFile("in_Duplicates_Are_Not_Written", ".txt");
@@ -133,5 +133,6 @@ public class DbTransposerTest {
     transposer.transpose(in.getAbsolutePath());
     
     EasyMock.verify(ps);
+    System.setOut(origOut);
   }
 }

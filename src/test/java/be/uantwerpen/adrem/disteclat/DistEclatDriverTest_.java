@@ -26,9 +26,7 @@ public class DistEclatDriverTest_ extends FIMTestCase {
   private static List<Set<Integer>> results;
   
   @Before
-  @Override
   public void setUp() throws Exception {
-    super.setUp();
     helper = new DriverTestHelper();
     outputDir = getTestTempDir("output");
     output = outputDir.getAbsoluteFile() + separator + Output_File_Name;

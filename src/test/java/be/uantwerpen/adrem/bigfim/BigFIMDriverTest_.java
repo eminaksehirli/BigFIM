@@ -45,10 +45,8 @@ public class BigFIMDriverTest_ extends FIMTestCase {
   private List<Set<Integer>> resultsPGU;
   private static List<Set<Integer>> results;
   
-  @Override
   @Before
   public void setUp() throws Exception {
-    super.setUp();
     helper = new DriverTestHelper();
     input = getTestTempFile("input");
     outputDir = getTestTempDir("output");

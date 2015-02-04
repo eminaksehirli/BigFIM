@@ -7,15 +7,13 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 
-import junit.framework.TestCase;
-
 import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
 
 /**
  * This class is based on MahoutTestCase!
  */
-public class FIMTestCase extends TestCase {
+public class FIMTestCase{
   
   private File testTempDir;
   

@@ -32,7 +32,16 @@ import be.uantwerpen.adrem.util.DbTransposerTest;
 import be.uantwerpen.adrem.util.ToolsTest;
 
 @RunWith(Suite.class)
-@SuiteClasses({FPMDriversTest.class, AprioriPhaseMapperTest.class, AprioriPhaseReducerTest.class,
-    ComputeTidListMapperTest.class, ComputeTidListReducerTest.class, EclatMinerTest.class, ItemTest.class,
-    SplitByKTextInputFormatTest.class, TrieDumperTest.class, DbTransposerTest.class, ToolsTest.class})
+@SuiteClasses({
+	FPMDriversTest.class, 
+	AprioriPhaseMapperTest.class, 
+	AprioriPhaseReducerTest.class,
+	ComputeTidListMapperTest.class, 
+	ComputeTidListReducerTest.class, 
+	EclatMinerTest.class, 
+	ItemTest.class,
+	SplitByKTextInputFormatTest.class, 
+	TrieDumperTest.class, 
+	DbTransposerTest.class, 
+	ToolsTest.class})
 public class AllTests {}
