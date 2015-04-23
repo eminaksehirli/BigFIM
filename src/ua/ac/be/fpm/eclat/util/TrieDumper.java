@@ -51,7 +51,9 @@ public class TrieDumper {
         itemsetBuilder.append(' ');
       } else if (c == OPENSUP) {
         readSupport = true;
-        itemsetBuilder.append(' ');
+        if (itemsetBuilder.charAt(itemsetBuilder.length() - 1) != ' ') {
+          itemsetBuilder.append(' ');
+        }
       } else if (c == CLOSESUP) {
         out.print(itemsetBuilder.toString());
         out.println("(" + supportBuilder.toString() + ")");

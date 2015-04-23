@@ -52,11 +52,11 @@ public class TreeStringReporter implements SetReporter {
   
   @Override
   public void report(int[] itemset, int support) {
-    
     if (prevSet == null) {
       for (int i = 0; i < itemset.length - 1; i++) {
         builder.append(itemset[i]).append(SEPARATOR);
       }
+      builder.append(itemset[itemset.length - 1]);
     } else {
       int depth = 0;
       while (depth < itemset.length && depth < prevSet.length && itemset[depth] == prevSet[depth]) {
@@ -69,8 +69,11 @@ public class TreeStringReporter implements SetReporter {
       for (int i = depth; i < itemset.length - 1; i++) {
         builder.append(itemset[i]).append(SEPARATOR);
       }
+      if (depth < itemset.length) {
+        builder.append(itemset[itemset.length - 1]);
+      }
     }
-    builder.append(itemset[itemset.length - 1]).append(OPENSUP).append(support).append(CLOSESUP);
+    builder.append(OPENSUP).append(support).append(CLOSESUP);
     prevSet = Arrays.copyOf(itemset, itemset.length);
     count++;
     if (count % MAX_SETS_BUFFER == 0) {
