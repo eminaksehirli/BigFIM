@@ -16,11 +16,9 @@
  */
 package be.uantwerpen.adrem.bigfim;
 
-import static java.io.File.separator;
-import static org.apache.hadoop.filecache.DistributedCache.addCacheFile;
-import static org.apache.hadoop.mapreduce.lib.input.FileInputFormat.setInputPaths;
 import static be.uantwerpen.adrem.bigfim.AprioriPhaseReducer.COUNTER_GROUPNAME;
 import static be.uantwerpen.adrem.bigfim.AprioriPhaseReducer.COUNTER_NRLARGEPREFIXGROUPS;
+import static be.uantwerpen.adrem.bigfim.AprioriPhaseReducer.COUNTER_NRPREFIXGROUPS;
 import static be.uantwerpen.adrem.hadoop.util.SplitByKTextInputFormat.NUMBER_OF_CHUNKS;
 import static be.uantwerpen.adrem.hadoop.util.Tools.cleanDirs;
 import static be.uantwerpen.adrem.hadoop.util.Tools.prepareJob;
@@ -30,6 +28,9 @@ import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_LINES_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.OUTPUT_DIR_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.PREFIX_LENGTH_KEY;
+import static java.io.File.separator;
+import static org.apache.hadoop.filecache.DistributedCache.addCacheFile;
+import static org.apache.hadoop.mapreduce.lib.input.FileInputFormat.setInputPaths;
 
 import java.io.IOException;
 import java.net.URI;
@@ -86,8 +87,10 @@ public class BigFIMDriver implements Tool {
     long start = System.currentTimeMillis();
     
     int phase = startAprioriPhase(opt);
-    startCreatePrefixGroups(opt, phase);
-    startMining(opt);
+    if (phase >= opt.prefixLength) {
+      startCreatePrefixGroups(opt, phase);
+      startMining(opt);
+    }
     long end = System.currentTimeMillis();
     
     System.out.println("[BigFIM]: Total time: " + (end - start) / 1000 + "s");
@@ -110,8 +113,8 @@ public class BigFIMDriver implements Tool {
     System.out.println("Job " + jobName + " took " + (end - start) / 1000 + "s");
   }
   
-  protected int startAprioriPhase(FIMOptions opt) throws IOException, InterruptedException, ClassNotFoundException,
-      URISyntaxException {
+  protected int startAprioriPhase(FIMOptions opt)
+      throws IOException, InterruptedException, ClassNotFoundException, URISyntaxException {
     long nrLines = -1;
     int prefixSize = opt.prefixLength;
     int i = 1;
@@ -124,10 +127,9 @@ public class BigFIMDriver implements Tool {
       Job job = prepareJob(new Path(opt.inputFile), new Path(outputDir), SplitByKTextInputFormat.class,
           AprioriPhaseMapper.class, Text.class, IntWritable.class, AprioriPhaseReducer.class, Text.class,
           IntWritable.class, TextOutputFormat.class);
-      
+          
       job.setJobName("Apriori Phase" + i);
       job.setJarByClass(BigFIMDriver.class);
-      
       job.setNumReduceTasks(1);
       
       Configuration conf = job.getConfiguration();
@@ -142,6 +144,12 @@ public class BigFIMDriver implements Tool {
       
       runJob(job, "Apriori Phase " + i);
       
+      // Make sure that the at least one prefix group is found, otherwise stop running.
+      if (job.getCounters().findCounter(COUNTER_GROUPNAME, COUNTER_NRPREFIXGROUPS).getValue() == 0) {
+        run = false;
+        System.out.println("[AprioriPhase]: No prefix groups are found");
+      }
+      // Make sure the data fits into memory, otherwise stop running.
       if (prefixSize <= i
           && job.getCounters().findCounter(COUNTER_GROUPNAME, COUNTER_NRLARGEPREFIXGROUPS).getValue() == 0) {
         run = false;
@@ -154,8 +162,8 @@ public class BigFIMDriver implements Tool {
     return i - 1;
   }
   
-  private void startCreatePrefixGroups(FIMOptions opt, int phase) throws IOException, ClassNotFoundException,
-      InterruptedException, URISyntaxException {
+  private void startCreatePrefixGroups(FIMOptions opt, int phase)
+      throws IOException, ClassNotFoundException, InterruptedException, URISyntaxException {
     String cacheFile = opt.outputDir + separator + "ap" + phase + separator + "part-r-00000";
     String outputFile = opt.outputDir + separator + "pg";
     System.out.println("[CreatePrefixGroups]: input: " + opt.inputFile + ", output: " + opt.outputDir);
@@ -163,7 +171,7 @@ public class BigFIMDriver implements Tool {
     Job job = prepareJob(new Path(opt.inputFile), new Path(outputFile), SplitByKTextInputFormat.class,
         ComputeTidListMapper.class, Text.class, IntArrayWritable.class, ComputeTidListReducer.class,
         IntArrayWritable.class, IntMatrixWritable.class, SequenceFileOutputFormat.class);
-    
+        
     job.setJobName("Create Prefix Groups");
     job.setJarByClass(BigFIMDriver.class);
     job.setNumReduceTasks(1);
@@ -185,7 +193,7 @@ public class BigFIMDriver implements Tool {
     Job job = prepareJob(new Path(inputFilesDir), new Path(outputFile), NoSplitSequenceFileInputFormat.class,
         EclatMinerMapper.class, Text.class, Text.class, EclatMinerReducer.class, Text.class, Text.class,
         TextOutputFormat.class);
-    
+        
     job.setJobName("Start Mining");
     job.setJarByClass(BigFIMDriver.class);
     job.setNumReduceTasks(1);
