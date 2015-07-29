@@ -16,20 +16,15 @@
  */
 package be.uantwerpen.adrem.bigfim;
 
-import static com.google.common.collect.Lists.newLinkedList;
-import static com.google.common.collect.Maps.newHashMap;
-import static org.apache.hadoop.filecache.DistributedCache.getLocalCacheFiles;
 import static be.uantwerpen.adrem.bigfim.Tools.convertLineToSet;
-import static be.uantwerpen.adrem.bigfim.Tools.createCandidates;
-import static be.uantwerpen.adrem.bigfim.Tools.readItemsetsFromFile;
+import static be.uantwerpen.adrem.bigfim.Tools.readItemsetsFromFileAsIntArray;
 import static be.uantwerpen.adrem.util.FIMOptions.DELIMITER_KEY;
+import static com.google.common.collect.Sets.newHashSet;
+import static org.apache.hadoop.filecache.DistributedCache.getLocalCacheFiles;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -39,6 +34,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import be.uantwerpen.adrem.hadoop.util.IntArrayWritable;
+import be.uantwerpen.adrem.util.ItemSetTrie;
 
 /**
  * Mapper class for the second phase of BigFIM. Each mapper receives a sub part (horizontal cut) of the dataset and
@@ -134,35 +130,10 @@ public class ComputeTidListMapper extends Mapper<LongWritable,Text,Text,IntArray
   
   private static int TIDS_BUFFER_SIZE = 100000;
   
-  static class Trie {
-    public int id;
-    public List<Integer> tids;
-    public Map<Integer,Trie> children;
-    
-    public Trie(int id) {
-      this.id = id;
-      tids = newLinkedList();
-      children = newHashMap();
-    }
-    
-    public Trie getChild(int id) {
-      Trie child = children.get(id);
-      if (child == null) {
-        child = new Trie(id);
-        children.put(id, child);
-      }
-      return child;
-    }
-    
-    public void addTid(int tid) {
-      tids.add(tid);
-    }
-  }
-  
   private final IntArrayWritable iaw;
   
   private Set<Integer> singletons;
-  private Trie countTrie;
+  private final ItemSetTrie countTrie;
   
   private int phase = 1;
   
@@ -175,7 +146,7 @@ public class ComputeTidListMapper extends Mapper<LongWritable,Text,Text,IntArray
   public ComputeTidListMapper() {
     iaw = new IntArrayWritable();
     singletons = null;
-    countTrie = new Trie(-1);
+    countTrie = new ItemSetTrie.TidListItemsetTrie(-1);
     counter = 0;
     id = -1;
     phase = 1;
@@ -190,13 +161,18 @@ public class ComputeTidListMapper extends Mapper<LongWritable,Text,Text,IntArray
     
     if (localCacheFiles != null) {
       String filename = localCacheFiles[0].toString();
-      List<SortedSet<Integer>> itemsets = readItemsetsFromFile(filename);
-      Collection<SortedSet<Integer>> candidates = createCandidates(itemsets);
-      singletons = Tools.getSingletonsFromSets(candidates);
+      // List<SortedSet<Integer>> itemsets = readItemsetsFromFile(filename);
+      // Collection<SortedSet<Integer>> candidates = createCandidates(itemsets);
+      // singletons = Tools.getSingletonsFromSets(candidates);
+      //
+      // countTrie = initializeCountTrie(candidates);
+      List<int[]> itemsets = readItemsetsFromFileAsIntArray(filename);
       
-      countTrie = initializeCountTrie(candidates);
+      Tools.initializeCountTrie(itemsets, countTrie);
+      singletons = newHashSet();
+      Tools.getSingletonsFromCountTrie(countTrie, singletons);
       
-      phase = itemsets.get(0).size() + 1;
+      phase = itemsets.get(0).length + 1;
     }
     id = context.getTaskAttemptID().getTaskID().getId();
   }
@@ -214,17 +190,6 @@ public class ComputeTidListMapper extends Mapper<LongWritable,Text,Text,IntArray
     if (tidCounter != 0) {
       doRecursiveReport(context, new StringBuilder(), 0, countTrie);
     }
-  }
-  
-  private static Trie initializeCountTrie(Collection<SortedSet<Integer>> candidates) {
-    Trie countTrie = new Trie(-1);
-    for (SortedSet<Integer> candidate : candidates) {
-      Trie trie = countTrie;
-      for (int item : candidate) {
-        trie = trie.getChild(item);
-      }
-    }
-    return countTrie;
   }
   
   private IntWritable[] createIntWritableWithIdSet(int numberOfTids) {
@@ -253,10 +218,10 @@ public class ComputeTidListMapper extends Mapper<LongWritable,Text,Text,IntArray
     }
   }
   
-  private void doRecursiveTidAdd(Context context, List<Integer> items, int ix, Trie trie) throws IOException,
-      InterruptedException {
+  private void doRecursiveTidAdd(Context context, List<Integer> items, int ix, ItemSetTrie trie)
+      throws IOException, InterruptedException {
     for (int i = ix; i < items.size(); i++) {
-      Trie recTrie = trie.children.get(items.get(i));
+      ItemSetTrie recTrie = trie.children.get(items.get(i));
       if (recTrie != null) {
         if (recTrie.children.isEmpty()) {
           recTrie.addTid(counter);
@@ -268,25 +233,26 @@ public class ComputeTidListMapper extends Mapper<LongWritable,Text,Text,IntArray
     }
   }
   
-  private void doRecursiveReport(Context context, StringBuilder builder, int depth, Trie trie) throws IOException,
-      InterruptedException {
+  private void doRecursiveReport(Context context, StringBuilder builder, int depth, ItemSetTrie trie)
+      throws IOException, InterruptedException {
     int length = builder.length();
-    for (Trie recTrie : trie.children.values()) {
+    for (ItemSetTrie recTrie : trie.children.values()) {
       if (recTrie != null) {
         if (depth + 1 == phase) {
-          if (recTrie.tids.isEmpty()) {
+          List<Integer> tids = ((ItemSetTrie.TidListItemsetTrie) recTrie).tids;
+          if (tids.isEmpty()) {
             continue;
           }
           Text key = new Text(builder.substring(0, Math.max(0, builder.length() - 1)));
-          IntWritable[] iw = createIntWritableWithIdSet(recTrie.tids.size());
+          IntWritable[] iw = createIntWritableWithIdSet(tids.size());
           int i1 = 1;
           iw[i1++] = new IntWritable(recTrie.id);
-          for (int tid : recTrie.tids) {
+          for (int tid : tids) {
             iw[i1++] = new IntWritable(tid);
           }
           iaw.set(iw);
           context.write(key, iaw);
-          recTrie.tids.clear();
+          tids.clear();
         } else {
           builder.append(recTrie.id + " ");
           doRecursiveReport(context, builder, depth + 1, recTrie);

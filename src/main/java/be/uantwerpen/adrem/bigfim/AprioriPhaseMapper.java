@@ -16,22 +16,16 @@
  */
 package be.uantwerpen.adrem.bigfim;
 
-import static com.google.common.collect.Maps.newHashMap;
-import static org.apache.hadoop.filecache.DistributedCache.getLocalCacheFiles;
 import static be.uantwerpen.adrem.bigfim.Tools.convertLineToSet;
-import static be.uantwerpen.adrem.bigfim.Tools.createCandidates;
-import static be.uantwerpen.adrem.bigfim.Tools.getSingletonsFromSets;
-import static be.uantwerpen.adrem.bigfim.Tools.readItemsetsFromFile;
+import static be.uantwerpen.adrem.bigfim.Tools.readItemsetsFromFileAsIntArray;
 import static be.uantwerpen.adrem.util.FIMOptions.DELIMITER_KEY;
+import static com.google.common.collect.Sets.newHashSet;
+import static org.apache.hadoop.filecache.DistributedCache.getLocalCacheFiles;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.SortedSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -39,6 +33,9 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+
+import be.uantwerpen.adrem.util.ItemSetTrie;
+import be.uantwerpen.adrem.util.ItemSetTrie.SupportCountItemsetTrie;
 
 /**
  * Mapper class for Apriori phase of BigFIM. Each mapper receives a sub part (horizontal cut) of the dataset and
@@ -133,39 +130,8 @@ import org.apache.hadoop.mapreduce.Mapper;
  */
 public class AprioriPhaseMapper extends Mapper<LongWritable,Text,Text,IntWritable> {
   
-  static class Trie {
-    final int id;
-    int support;
-    final Map<Integer,Trie> children;
-    
-    public Trie(int id) {
-      this.id = id;
-      this.support = 0;
-      children = newHashMap();
-    }
-    
-    public void incrementSupport() {
-      support += 1;
-    }
-    
-    public Trie getChild(int id) {
-      Trie child = children.get(id);
-      if (child == null) {
-        child = new Trie(id);
-        children.put(id, child);
-      }
-      return child;
-    }
-    
-    @Override
-    public String toString() {
-      return "[" + id + "(" + support + "):" + children + "]";
-    }
-    
-  }
-  
   private Set<Integer> singletons;
-  private Trie countTrie;
+  private ItemSetTrie countTrie;
   
   private int phase = 1;
   private String delimiter;
@@ -176,19 +142,16 @@ public class AprioriPhaseMapper extends Mapper<LongWritable,Text,Text,IntWritabl
     delimiter = conf.get(DELIMITER_KEY, " ");
     
     Path[] localCacheFiles = getLocalCacheFiles(conf);
-    countTrie = new Trie(-1);
+    countTrie = new ItemSetTrie.SupportCountItemsetTrie(-1);
     if (localCacheFiles != null) {
       String filename = localCacheFiles[0].toString();
-      List<SortedSet<Integer>> itemsets = readItemsetsFromFile(filename);
-      Collection<SortedSet<Integer>> candidates = createCandidates(itemsets);
-      singletons = getSingletonsFromSets(candidates);
+      List<int[]> itemsets = readItemsetsFromFileAsIntArray(filename);
       
-      phase = itemsets.get(0).size() + 1;
+      Tools.initializeCountTrie(itemsets, countTrie);
+      singletons = newHashSet();
+      Tools.getSingletonsFromCountTrie(countTrie, singletons);
       
-      countTrie = initializeCountTrie(candidates);
-      
-      System.out.println("Singletons: " + singletons.size());
-      System.out.println("Words: " + candidates.size());
+      phase = itemsets.get(0).length + 1;
     }
   }
   
@@ -204,27 +167,17 @@ public class AprioriPhaseMapper extends Mapper<LongWritable,Text,Text,IntWritabl
     recReport(context, new StringBuilder(), countTrie);
   }
   
-  private static Trie initializeCountTrie(Collection<SortedSet<Integer>> candidates) {
-    Trie countTrie = new Trie(-1);
-    for (SortedSet<Integer> candidate : candidates) {
-      Trie trie = countTrie;
-      Iterator<Integer> it = candidate.iterator();
-      while (it.hasNext()) {
-        trie = trie.getChild(it.next());
-      }
-    }
-    return countTrie;
-  }
-  
-  private void recReport(Context context, StringBuilder builder, Trie trie) throws IOException, InterruptedException {
+  private void recReport(Context context, StringBuilder builder, ItemSetTrie trie)
+      throws IOException, InterruptedException {
     int length = builder.length();
-    for (Entry<Integer,Trie> entry : trie.children.entrySet()) {
-      Trie recTrie = entry.getValue();
+    for (Entry<Integer,ItemSetTrie> entry : trie.children.entrySet()) {
+      ItemSetTrie recTrie = entry.getValue();
       builder.append(recTrie.id + " ");
       if (recTrie.children.isEmpty()) {
-        if (recTrie.support != 0) {
+        int support = ((SupportCountItemsetTrie) recTrie).support;
+        if (support != 0) {
           Text key = new Text(builder.substring(0, builder.length() - 1));
-          IntWritable value = new IntWritable(recTrie.support);
+          IntWritable value = new IntWritable(support);
           context.write(key, value);
         }
       } else {
@@ -241,8 +194,8 @@ public class AprioriPhaseMapper extends Mapper<LongWritable,Text,Text,IntWritabl
     
     if (phase == 1) {
       for (int i = 0; i < items.size(); i++) {
-        Trie recTrie = countTrie.getChild(items.get(i));
-        recTrie.incrementSupport();
+        ItemSetTrie recTrie = countTrie.getChild(items.get(i));
+        recTrie.addTid(1);
       }
       return;
     }
@@ -250,12 +203,12 @@ public class AprioriPhaseMapper extends Mapper<LongWritable,Text,Text,IntWritabl
     doRecursiveCount(items, 0, countTrie);
   }
   
-  private void doRecursiveCount(List<Integer> items, int ix, Trie trie) {
+  private void doRecursiveCount(List<Integer> items, int ix, ItemSetTrie trie) {
     for (int i = ix; i < items.size(); i++) {
-      Trie recTrie = trie.children.get(items.get(i));
+      ItemSetTrie recTrie = trie.children.get(items.get(i));
       if (recTrie != null) {
         if (recTrie.children.isEmpty()) {
-          recTrie.incrementSupport();
+          recTrie.addTid(1);
         } else {
           doRecursiveCount(items, i + 1, recTrie);
         }

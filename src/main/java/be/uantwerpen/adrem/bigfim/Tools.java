@@ -30,8 +30,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
+
+import be.uantwerpen.adrem.util.ItemSetTrie;
 
 /**
  * Some extra utility functions used by BigFIM mapper classes.
@@ -58,8 +61,9 @@ public class Tools {
    * @throws IOException
    *           thrown if the file can not be found or read
    */
-  public static List<SortedSet<Integer>> readItemsetsFromFile(String fileName) throws NumberFormatException,
-      IOException {
+  @Deprecated
+  public static List<SortedSet<Integer>> readItemsetsFromFile(String fileName)
+      throws NumberFormatException, IOException {
     List<SortedSet<Integer>> itemsets = newArrayList();
     
     String line;
@@ -71,6 +75,43 @@ public class Tools {
         set.add(valueOf(split));
       }
       itemsets.add(set);
+    }
+    reader.close();
+    return itemsets;
+  }
+  
+  /**
+   * Reads a list of itemsets from a file. Each line is in transactional format and with integer ids as follows:
+   * 
+   * <pre>
+   * {@code<item1><space><item2>...<itemN><tab><support>}
+   * </pre>
+   * 
+   * @param fileName
+   *          name of the file from which itemsets are read
+   * @return the list of itemsets
+   * @throws NumberFormatException
+   *           thrown if an item is not in integer format
+   * @throws IOException
+   *           thrown if the file can not be found or read
+   */
+  public static List<int[]> readItemsetsFromFileAsIntArray(String fileName) throws NumberFormatException, IOException {
+    List<int[]> itemsets = newArrayList();
+    
+    String line;
+    BufferedReader reader = new BufferedReader(new FileReader(fileName));
+    while ((line = reader.readLine()) != null) {
+      String[] splits = line.split(HeadDelimiter)[0].split(ItemDelimiter);
+      SortedSet<Integer> set = newTreeSet();
+      for (String split : splits) {
+        set.add(valueOf(split));
+      }
+      int[] intSet = new int[set.size()];
+      int i = 0;
+      for (Integer item : set) {
+        intSet[i++] = item;
+      }
+      itemsets.add(intSet);
     }
     reader.close();
     return itemsets;
@@ -91,7 +132,8 @@ public class Tools {
    * @return a list of items in integer format that is either the complete line, if levelOne is true. Otherwise if
    *         singletons is not empty, this list of items is a subset of the singletons occurring in line.
    */
-  public static List<Integer> convertLineToSet(String line, boolean levelOne, Set<Integer> singletons, String delimiter) {
+  public static List<Integer> convertLineToSet(String line, boolean levelOne, Set<Integer> singletons,
+      String delimiter) {
     String[] itemsSplit = line.split(delimiter);
     
     List<Integer> items = newArrayListWithCapacity(itemsSplit.length);
@@ -113,6 +155,7 @@ public class Tools {
    *          itemsets of length that are merged together to form length+1 candidates
    * @return a set of candidates that are combination of the original itemsets and that are of length+1
    */
+  @Deprecated
   public static Collection<SortedSet<Integer>> createCandidates(List<SortedSet<Integer>> itemsets) {
     List<SortedSet<Integer>> candidates = newArrayListWithCapacity(itemsets.size());
     
@@ -136,6 +179,7 @@ public class Tools {
     return candidates;
   }
   
+  @Deprecated
   private static boolean check(Set<Integer> set1, Set<Integer> set2) {
     Iterator<Integer> it1 = set1.iterator();
     Iterator<Integer> it2 = set2.iterator();
@@ -144,6 +188,15 @@ public class Tools {
       Integer next = it1.next();
       Integer next2 = it2.next();
       if (!next.equals(next2)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  public static boolean check(int[] set1, int[] set2) {
+    for (int i = 0, end = set1.length - 1; i < end; i++) {
+      if (set1[i] != set2[i]) {
         return false;
       }
     }
@@ -163,6 +216,48 @@ public class Tools {
       singletons.addAll(set);
     }
     return singletons;
+  }
+  
+  public static void initializeCountTrie(List<int[]> itemsets, ItemSetTrie countTrie) {
+    int i = 0;
+    int candidateCount = 0;
+    ListIterator<int[]> it1 = itemsets.listIterator(i);
+    for (; i < itemsets.size() - 1; i++) {
+      int[] itemset1 = it1.next();
+      ListIterator<int[]> it2 = itemsets.listIterator(i + 1);
+      while (it2.hasNext()) {
+        int[] itemset2 = it2.next();
+        if (check(itemset1, itemset2)) {
+          SortedSet<Integer> candidate = newTreeSet();
+          for (int[] itemset : new int[][] {itemset1, itemset2}) {
+            for (int item : itemset) {
+              candidate.add(item);
+            }
+          }
+          candidateCount++;
+          ItemSetTrie trie = countTrie;
+          Iterator<Integer> it = candidate.iterator();
+          while (it.hasNext()) {
+            trie = trie.getChild(it.next());
+          }
+        } else {
+          continue;
+        }
+      }
+    }
+    System.out.println("Candidates: " + candidateCount);
+  }
+  
+  public static void getSingletonsFromCountTrie(ItemSetTrie trie, Set<Integer> singletons) {
+    if (trie.id != -1) {
+      singletons.add(trie.id);
+    }
+    for (Entry<Integer,ItemSetTrie> entry : trie.children.entrySet()) {
+      getSingletonsFromCountTrie(entry.getValue(), singletons);
+    }
+    if (trie.id == -1) {
+      System.out.println("Singletons: " + singletons.size());
+    }
   }
   
 }
