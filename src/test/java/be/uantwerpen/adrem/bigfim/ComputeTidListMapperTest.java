@@ -28,10 +28,9 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import be.uantwerpen.adrem.FIMTestCase;
-import be.uantwerpen.adrem.bigfim.ComputeTidListMapper;
-import be.uantwerpen.adrem.bigfim.ComputeTidListMapper.Trie;
 import be.uantwerpen.adrem.hadoop.util.IntArrayWritable;
 import be.uantwerpen.adrem.hadoop.util.IntMatrixWritable;
+import be.uantwerpen.adrem.util.ItemSetTrie;
 
 public class ComputeTidListMapperTest extends FIMTestCase {
   
@@ -48,31 +47,31 @@ public class ComputeTidListMapperTest extends FIMTestCase {
     return set;
   }
   
-  private static Trie create_Count_Trie_Not_Empty() {
-    Trie trie = new Trie(-1);
+  private static ItemSetTrie.TidListItemsetTrie create_Count_Trie_Not_Empty() {
+    ItemSetTrie.TidListItemsetTrie trie = new ItemSetTrie.TidListItemsetTrie(-1);
     
-    Trie child1 = trie.getChild(1);
+    ItemSetTrie child1 = trie.getChild(1);
     child1.getChild(2);
     child1.getChild(3);
     child1.getChild(4);
     
-    Trie child2 = trie.getChild(2);
+    ItemSetTrie child2 = trie.getChild(2);
     child2.getChild(3);
     child2.getChild(5);
     
-    Trie child3 = trie.getChild(3);
+    ItemSetTrie child3 = trie.getChild(3);
     child3.getChild(4);
     
-    Trie child4 = trie.getChild(4);
+    ItemSetTrie child4 = trie.getChild(4);
     child4.getChild(5);
     
     return trie;
   }
   
-  private static Trie create_Count_Trie_Not_Empty_2() {
-    Trie trie = new Trie(-1);
+  private static ItemSetTrie.TidListItemsetTrie create_Count_Trie_Not_Empty_2() {
+    ItemSetTrie.TidListItemsetTrie trie = new ItemSetTrie.TidListItemsetTrie(-1);
     
-    Trie child1 = trie.getChild(1);
+    ItemSetTrie child1 = trie.getChild(1);
     child1.getChild(2);
     
     return trie;
@@ -198,7 +197,7 @@ public class ComputeTidListMapperTest extends FIMTestCase {
     
     EasyMock.replay(ctx);
     
-    ComputeTidListMapper mapper = createMapper(2, new Trie(-1));
+    ComputeTidListMapper mapper = createMapper(2, new ItemSetTrie.TidListItemsetTrie(-1));
     
     for (int i = 0; i < data.length; i++) {
       mapper.map(new LongWritable(i), new Text(data[i]), ctx);
@@ -209,7 +208,8 @@ public class ComputeTidListMapperTest extends FIMTestCase {
     EasyMock.verify(ctx);
   }
   
-  private static ComputeTidListMapper createMapper(int phase, final Trie trie) throws Exception {
+  private static ComputeTidListMapper createMapper(int phase, final ItemSetTrie.TidListItemsetTrie trie)
+      throws Exception {
     ComputeTidListMapper mapper = new ComputeTidListMapper();
     setField(mapper, "singletons", create_Set_1());
     setField(mapper, "phase", phase);
