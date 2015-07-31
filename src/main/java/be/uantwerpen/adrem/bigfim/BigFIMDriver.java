@@ -18,7 +18,6 @@ package be.uantwerpen.adrem.bigfim;
 
 import static be.uantwerpen.adrem.bigfim.AprioriPhaseReducer.COUNTER_GROUPNAME;
 import static be.uantwerpen.adrem.bigfim.AprioriPhaseReducer.COUNTER_NRLARGEPREFIXGROUPS;
-import static be.uantwerpen.adrem.bigfim.AprioriPhaseReducer.COUNTER_NRPREFIXGROUPS;
 import static be.uantwerpen.adrem.hadoop.util.SplitByKTextInputFormat.NUMBER_OF_CHUNKS;
 import static be.uantwerpen.adrem.hadoop.util.Tools.cleanDirs;
 import static be.uantwerpen.adrem.hadoop.util.Tools.prepareJob;
@@ -87,10 +86,8 @@ public class BigFIMDriver implements Tool {
     long start = System.currentTimeMillis();
     
     int phase = startAprioriPhase(opt);
-    if (phase >= opt.prefixLength) {
-      startCreatePrefixGroups(opt, phase);
-      startMining(opt);
-    }
+    startCreatePrefixGroups(opt, phase);
+    startMining(opt);
     long end = System.currentTimeMillis();
     
     System.out.println("[BigFIM]: Total time: " + (end - start) / 1000 + "s");
@@ -116,73 +113,95 @@ public class BigFIMDriver implements Tool {
   protected int startAprioriPhase(FIMOptions opt)
       throws IOException, InterruptedException, ClassNotFoundException, URISyntaxException {
     long nrLines = -1;
-    int prefixSize = opt.prefixLength;
     int i = 1;
     boolean run = true;
     while (run) {
-      String outputDir = opt.outputDir + separator + "ap" + i;
-      String cacheFile = opt.outputDir + separator + "ap" + (i - 1) + separator + "part-r-00000";
-      System.out.println("[AprioriPhase]: Phase: " + i + " input: " + opt.inputFile + ", output: " + opt.outputDir);
-      
-      Job job = prepareJob(new Path(opt.inputFile), new Path(outputDir), SplitByKTextInputFormat.class,
-          AprioriPhaseMapper.class, Text.class, IntWritable.class, AprioriPhaseReducer.class, Text.class,
-          IntWritable.class, TextOutputFormat.class);
-          
-      job.setJobName("Apriori Phase" + i);
-      job.setJarByClass(BigFIMDriver.class);
-      job.setNumReduceTasks(1);
-      
-      Configuration conf = job.getConfiguration();
-      setConfigurationValues(conf, opt);
-      if (nrLines != -1) {
-        conf.setLong(NUMBER_OF_LINES_KEY, nrLines);
-      }
-      
-      if (i > 1) {
-        addCacheFile(new URI(cacheFile), conf);
-      }
-      
-      runJob(job, "Apriori Phase " + i);
-      
-      // Make sure that the at least one prefix group is found, otherwise stop running.
-      if (job.getCounters().findCounter(COUNTER_GROUPNAME, COUNTER_NRPREFIXGROUPS).getValue() == 0) {
-        run = false;
-        System.out.println("[AprioriPhase]: No prefix groups are found");
-      }
-      // Make sure the data fits into memory, otherwise stop running.
-      if (prefixSize <= i
-          && job.getCounters().findCounter(COUNTER_GROUPNAME, COUNTER_NRLARGEPREFIXGROUPS).getValue() == 0) {
-        run = false;
-        if (prefixSize < i) {
-          System.out.println("[AprioriPhase]: Prefix group length updated! Now " + (i) + " instead of " + prefixSize);
+      if (i == 1) {
+        String outputDir = opt.outputDir + separator + "ap" + i;
+        String info = "Apriori Phase " + i;
+        run = runAprioriOncPhaseOnce(opt, nrLines, i, info, outputDir, null);
+      } else {
+        Path path = new Path(opt.outputDir + separator + "tg" + (i - 1));
+        for (FileStatus status : path.getFileSystem(new Configuration()).listStatus(path)) {
+          String cacheFile = status.getPath().toString();
+          String trieGroupCount = cacheFile.substring(cacheFile.lastIndexOf('/'), cacheFile.length());
+          trieGroupCount = trieGroupCount.split("-")[1];
+          String outputDir = opt.outputDir + separator + "ap" + i + "-trieGroup" + trieGroupCount;
+          System.out.println("CacheFile " + cacheFile);
+          String info = "Apriori Phase " + i + ", Trie Group " + trieGroupCount;
+          run = runAprioriOncPhaseOnce(opt, nrLines, i, info, outputDir, cacheFile);
         }
       }
+      
       i++;
     }
     return i - 1;
   }
   
-  private void startCreatePrefixGroups(FIMOptions opt, int phase)
-      throws IOException, ClassNotFoundException, InterruptedException, URISyntaxException {
-    String cacheFile = opt.outputDir + separator + "ap" + phase + separator + "part-r-00000";
-    String outputFile = opt.outputDir + separator + "pg";
-    System.out.println("[CreatePrefixGroups]: input: " + opt.inputFile + ", output: " + opt.outputDir);
+  private boolean runAprioriOncPhaseOnce(FIMOptions opt, long nrLines, int i, String info, String outputDir,
+      String cacheFile) throws IOException, URISyntaxException, ClassNotFoundException, InterruptedException {
+    int prefixSize = opt.prefixLength;
     
-    Job job = prepareJob(new Path(opt.inputFile), new Path(outputFile), SplitByKTextInputFormat.class,
-        ComputeTidListMapper.class, Text.class, IntArrayWritable.class, ComputeTidListReducer.class,
-        IntArrayWritable.class, IntMatrixWritable.class, SequenceFileOutputFormat.class);
+    System.out.println("[AprioriPhase]: Phase: " + i + " input: " + opt.inputFile + ", output: " + opt.outputDir);
+    
+    Job job = prepareJob(new Path(opt.inputFile), new Path(outputDir), SplitByKTextInputFormat.class,
+        AprioriPhaseMapper.class, Text.class, IntWritable.class, AprioriPhaseReducer.class, Text.class,
+        IntWritable.class, TextOutputFormat.class);
         
-    job.setJobName("Create Prefix Groups");
+    job.setJobName(info);
     job.setJarByClass(BigFIMDriver.class);
+    
     job.setNumReduceTasks(1);
     
     Configuration conf = job.getConfiguration();
     setConfigurationValues(conf, opt);
-    conf.setInt(PREFIX_LENGTH_KEY, phase);
+    if (nrLines != -1) {
+      conf.setLong(NUMBER_OF_LINES_KEY, nrLines);
+    }
     
-    addCacheFile(new URI(cacheFile), job.getConfiguration());
+    if (cacheFile != null) {
+      addCacheFile(new URI(cacheFile), conf);
+    }
     
-    runJob(job, "Prefix Creation");
+    runJob(job, info);
+    
+    if (prefixSize <= i
+        && job.getCounters().findCounter(COUNTER_GROUPNAME, COUNTER_NRLARGEPREFIXGROUPS).getValue() == 0) {
+      return false;
+    }
+    if (prefixSize < i) {
+      System.out.println("[AprioriPhase]: Prefix group length updated! Now " + (i) + " instead of " + prefixSize);
+    }
+    return true;
+  }
+  
+  private void startCreatePrefixGroups(FIMOptions opt, int phase)
+      throws IOException, ClassNotFoundException, InterruptedException, URISyntaxException {
+    Path path = new Path(opt.outputDir + separator + "tg" + phase);
+    for (FileStatus status : path.getFileSystem(new Configuration()).listStatus(path)) {
+      String cacheFile = status.getPath().toString();
+      String trieGroupCount = cacheFile.substring(cacheFile.lastIndexOf('/'), cacheFile.length());
+      trieGroupCount = trieGroupCount.split("-")[1];
+      String outputFile = opt.outputDir + separator + "pg-trieGroup" + trieGroupCount;
+      System.out.println(
+          "[CreatePrefixGroups]: input: " + opt.inputFile + ", output: " + opt.outputDir + ", cache: " + cacheFile);
+          
+      Job job = prepareJob(new Path(opt.inputFile), new Path(outputFile), SplitByKTextInputFormat.class,
+          ComputeTidListMapper.class, Text.class, IntArrayWritable.class, ComputeTidListReducer.class,
+          IntArrayWritable.class, IntMatrixWritable.class, SequenceFileOutputFormat.class);
+          
+      job.setJobName("Create Prefix Groups");
+      job.setJarByClass(BigFIMDriver.class);
+      job.setNumReduceTasks(1);
+      
+      Configuration conf = job.getConfiguration();
+      setConfigurationValues(conf, opt);
+      conf.setInt(PREFIX_LENGTH_KEY, phase);
+      
+      addCacheFile(new URI(cacheFile), job.getConfiguration());
+      
+      runJob(job, "Prefix Creation");
+    }
   }
   
   private void startMining(FIMOptions opt) throws IOException, ClassNotFoundException, InterruptedException {

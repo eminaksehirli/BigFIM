@@ -16,12 +16,12 @@
  */
 package be.uantwerpen.adrem.bigfim;
 
-import static com.google.common.collect.Lists.newArrayListWithCapacity;
-import static com.google.common.collect.Maps.newHashMap;
 import static be.uantwerpen.adrem.hadoop.util.IntArrayWritable.EmptyIaw;
 import static be.uantwerpen.adrem.hadoop.util.IntMatrixWritable.EmptyImw;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
+import static com.google.common.collect.Lists.newArrayListWithCapacity;
+import static com.google.common.collect.Maps.newHashMap;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -32,6 +32,9 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
@@ -117,6 +120,9 @@ public class ComputeTidListReducer extends Reducer<Text,IntArrayWritable,IntArra
   
   private List<MutableInt> bucketSizes;
   
+  private String basePGDir;
+  private int pgStartIndex;
+  
   private MultipleOutputs<IntArrayWritable,IntMatrixWritable> mos;
   private int numberOfMappers;
   
@@ -131,14 +137,58 @@ public class ComputeTidListReducer extends Reducer<Text,IntArrayWritable,IntArra
       bucketSizes.add(new MutableInt());
     }
     
+    getBasePGDir(conf);
+    getPgStartIndex(conf);
+    
     mos = new MultipleOutputs<IntArrayWritable,IntMatrixWritable>(context);
     
   }
   
+  private void getPgStartIndex(Configuration conf) {
+    try {
+      Path path = new Path(basePGDir);
+      FileSystem fs = path.getFileSystem(new Configuration());
+      
+      if (!fs.exists(path)) {
+        pgStartIndex = 0;
+        return;
+      }
+      
+      int largestIx = 0;
+      for (FileStatus file : fs.listStatus(path)) {
+        String tmp = file.getPath().toString();
+        if (!tmp.contains("bucket")) {
+          continue;
+        }
+        tmp = tmp.substring(tmp.lastIndexOf('/'), tmp.length());
+        int ix = Integer.parseInt(tmp.split("-")[1]);
+        largestIx = Math.max(largestIx, ix);
+        pgStartIndex += 1;
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+  
+  private void getBasePGDir(Configuration conf) {
+    try {
+      Path path = new Path(conf.get("mapred.output.dir"));
+      FileSystem fs = path.getFileSystem(new Configuration());
+      
+      String dir = fs.listStatus(path)[0].getPath().toString();
+      dir = dir.substring(dir.indexOf('/'), dir.length());// strip of file:/
+      dir = dir.substring(0, dir.lastIndexOf("/_temporary"));// strip of _temporary
+      
+      basePGDir = dir.substring(0, dir.lastIndexOf('/')) + "/pg";
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+  
   @Override
-  public void reduce(Text prefix, Iterable<IntArrayWritable> values, Context context) throws IOException,
-      InterruptedException {
-    
+  public void reduce(Text prefix, Iterable<IntArrayWritable> values, Context context)
+      throws IOException, InterruptedException {
+      
     Map<Integer,IntArrayWritable[]> map = newHashMap();
     for (IntArrayWritable iaw : values) {
       Writable[] w = iaw.get();
@@ -193,16 +243,17 @@ public class ComputeTidListReducer extends Reducer<Text,IntArrayWritable,IntArra
     mos.close();
   }
   
-  private void assignToBucket(Text key, Map<Integer,IntArrayWritable[]> map, int totalTids) throws IOException,
-      InterruptedException {
+  private void assignToBucket(Text key, Map<Integer,IntArrayWritable[]> map, int totalTids)
+      throws IOException, InterruptedException {
     int lowestBucket = getLowestBucket();
     if (!checkLowestBucket(lowestBucket, totalTids)) {
       bucketSizes.add(new MutableInt());
       lowestBucket = bucketSizes.size() - 1;
     }
     bucketSizes.get(lowestBucket).add(totalTids);
+    lowestBucket += pgStartIndex;
     
-    String baseOutputPath = "bucket-" + lowestBucket;
+    String baseOutputPath = basePGDir + "/bucket-" + lowestBucket;
     mos.write(IntArrayWritable.of(key.toString()), EmptyImw, baseOutputPath);
     for (Entry<Integer,IntArrayWritable[]> entry : map.entrySet()) {
       IntArrayWritable owKey = IntArrayWritable.of(entry.getKey());

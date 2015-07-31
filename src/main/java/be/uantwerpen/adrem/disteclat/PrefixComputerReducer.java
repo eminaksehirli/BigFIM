@@ -16,13 +16,13 @@
  */
 package be.uantwerpen.adrem.disteclat;
 
-import static com.google.common.collect.Lists.newArrayListWithCapacity;
-import static com.google.common.collect.Maps.newHashMap;
 import static be.uantwerpen.adrem.hadoop.util.IntArrayWritable.EmptyIaw;
 import static be.uantwerpen.adrem.hadoop.util.IntMatrixWritable.EmptyImw;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.OUTPUT_DIR_KEY;
+import static com.google.common.collect.Lists.newArrayListWithCapacity;
+import static com.google.common.collect.Maps.newHashMap;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -122,9 +122,9 @@ public class PrefixComputerReducer extends Reducer<Text,IntMatrixWritable,IntArr
   }
   
   @Override
-  public void reduce(Text prefix, Iterable<IntMatrixWritable> values, Context context) throws IOException,
-      InterruptedException {
-    
+  public void reduce(Text prefix, Iterable<IntMatrixWritable> values, Context context)
+      throws IOException, InterruptedException {
+      
     if (prefix.equals(PrefixItemTIDsReporter.ShortKey)) {
       printShorts(values);
     }
@@ -191,8 +191,8 @@ public class PrefixComputerReducer extends Reducer<Text,IntMatrixWritable,IntArr
     mos.close();
   }
   
-  private void assignToBucket(Text key, Map<Integer,IntArrayWritable[]> map, int totalTids) throws IOException,
-      InterruptedException {
+  private void assignToBucket(Text key, Map<Integer,IntArrayWritable[]> map, int totalTids)
+      throws IOException, InterruptedException {
     int lowestBucket = getLowestBucket();
     if (!checkLowestBucket(lowestBucket, totalTids)) {
       bucketSizes.add(new MutableInt());

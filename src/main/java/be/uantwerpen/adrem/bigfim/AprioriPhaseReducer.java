@@ -16,8 +16,9 @@
  */
 package be.uantwerpen.adrem.bigfim;
 
-import static com.google.common.collect.Maps.newHashMap;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
+import static com.google.common.collect.Maps.newHashMap;
 
 import java.io.IOException;
 import java.util.Map;
@@ -25,10 +26,14 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
 /**
  * Reducer class for Apriori phase of BigFIM. This reducer combines the supports of length+1 candidates from different
@@ -95,15 +100,94 @@ public class AprioriPhaseReducer extends Reducer<Text,IntWritable,Text,Writable>
   public static final String COUNTER_NRPREFIXGROUPS = "NumberOfPrefixGroups";
   public static final String COUNTER_NRLARGEPREFIXGROUPS = "NumberOfLargePrefixGroups";
   
+  
   private final Map<String,MutableInt> map = newHashMap();
   
+  private final Map<String,Integer> trieGroupAllocationMap = newHashMap();
+  private int trieGroupAllocationCounter;
+  
+  private int numberOfMappers;
   private int minSup;
+  
+  private String baseTGDir;
+  private int tgStartIndex;
+  
+  private MultipleOutputs<Text,Writable> mos;
   
   @Override
   public void setup(Context context) {
     Configuration conf = context.getConfiguration();
     
+    trieGroupAllocationCounter = 0;
+    
+    numberOfMappers = conf.getInt(NUMBER_OF_MAPPERS_KEY, 1);
     minSup = conf.getInt(MIN_SUP_KEY, 1);
+    
+    getBaseTGDir(conf);
+    getTgStartIndex(conf);
+    
+    mos = new MultipleOutputs<Text,Writable>(context);
+  }
+  
+  private void getTgStartIndex(Configuration conf) {
+    try {
+      Path path = new Path(baseTGDir);
+      FileSystem fs = path.getFileSystem(new Configuration());
+      
+      if (!fs.exists(path)) {
+        tgStartIndex = 0;
+        return;
+      }
+      
+      int largestIx = 0;
+      for (FileStatus file : fs.listStatus(path)) {
+        String tmp = file.getPath().toString();
+        if (!tmp.contains("trieGroup")) {
+          continue;
+        }
+        tmp = tmp.substring(tmp.lastIndexOf('/'), tmp.length());
+        int ix = Integer.parseInt(tmp.split("-")[1]);
+        largestIx = Math.max(largestIx, ix);
+        tgStartIndex += 1;
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+  
+  private void getBaseTGDir(Configuration conf) {
+    try {
+      Path path = new Path(conf.get("mapred.output.dir"));
+      FileSystem fs = path.getFileSystem(new Configuration());
+      
+      String dir = fs.listStatus(path)[0].getPath().toString();
+      dir = dir.substring(dir.indexOf('/'), dir.length());// strip of file:/
+      dir = dir.substring(0, dir.lastIndexOf("/_temporary"));// strip of _temporary
+      
+      String aprioriPhase = dir.substring(dir.lastIndexOf('/') + 1, dir.length());
+      int end = aprioriPhase.indexOf('-');
+      end = end > 0 ? end : aprioriPhase.length();
+      aprioriPhase = aprioriPhase.substring(2, end);
+      
+      baseTGDir = dir.substring(0, dir.lastIndexOf('/')) + "/tg" + aprioriPhase;
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+  
+  private int getTrieGroupAllocation(String string) {
+    int ixEnd = string.lastIndexOf(' ');
+    if (ixEnd == -1) {
+      return 0;
+    }
+    String prefix = string.substring(0, ixEnd);
+    Integer ix = trieGroupAllocationMap.get(prefix);
+    if (ix == null) {
+      ix = trieGroupAllocationCounter + tgStartIndex;
+      trieGroupAllocationMap.put(prefix, ix);
+      trieGroupAllocationCounter = (trieGroupAllocationCounter + 1) % numberOfMappers;
+    }
+    return ix;
   }
   
   @Override
@@ -114,10 +198,13 @@ public class AprioriPhaseReducer extends Reducer<Text,IntWritable,Text,Writable>
     }
     
     if (sup >= minSup) {
+      int ix = getTrieGroupAllocation(key.toString());
+      System.out.println(key + " " + ix);
+      String baseOutputPath = baseTGDir + "/trieGroup-" + ix;
+      mos.write(key, new Text(sup + ""), baseOutputPath);
       context.write(key, new Text(sup + ""));
       updatePGInfo(key.toString(), sup);
     }
-    
   }
   
   private void updatePGInfo(String key, int sup) {
@@ -139,8 +226,9 @@ public class AprioriPhaseReducer extends Reducer<Text,IntWritable,Text,Writable>
   }
   
   @Override
-  public void cleanup(Context context) {
+  public void cleanup(Context context) throws IOException, InterruptedException {
     updatePGCounters(context);
+    mos.close();
   }
   
   private void updatePGCounters(Context context) {
