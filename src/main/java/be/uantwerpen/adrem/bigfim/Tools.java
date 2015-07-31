@@ -228,18 +228,20 @@ public class Tools {
       while (it2.hasNext()) {
         int[] itemset2 = it2.next();
         if (check(itemset1, itemset2)) {
-          SortedSet<Integer> candidate = newTreeSet();
-          for (int[] itemset : new int[][] {itemset1, itemset2}) {
-            for (int item : itemset) {
-              candidate.add(item);
-            }
-          }
-          candidateCount++;
           ItemSetTrie trie = countTrie;
-          Iterator<Integer> it = candidate.iterator();
-          while (it.hasNext()) {
-            trie = trie.getChild(it.next());
+          int lastIx = itemset1.length - 1;
+          for (int j = 0; j < lastIx; j++) {
+            trie = trie.getChild(itemset1[j]);
           }
+          if (itemset1[lastIx] < itemset2[lastIx]) {
+            trie = trie.getChild(itemset1[lastIx]);
+            trie.getChild(itemset2[lastIx]);
+          } else {
+            trie = trie.getChild(itemset2[lastIx]);
+            trie.getChild(itemset1[lastIx]);
+          }
+          
+          candidateCount++;
         } else {
           continue;
         }
