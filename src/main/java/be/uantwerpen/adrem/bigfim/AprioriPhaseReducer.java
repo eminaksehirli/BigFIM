@@ -17,13 +17,15 @@
 package be.uantwerpen.adrem.bigfim;
 
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
-import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
+import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -94,23 +96,35 @@ import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
  */
 public class AprioriPhaseReducer extends Reducer<Text,IntWritable,Text,Writable> {
   
+  private static class Itemset {
+    String itemset;
+    int support;
+    
+    public Itemset(String itemset, int support) {
+      this.itemset = itemset;
+      this.support = support;
+    }
+  }
+  
   private static final String EMPTY_KEY = "";
   
   public static final String COUNTER_GROUPNAME = "AprioriPhase";
   public static final String COUNTER_NRPREFIXGROUPS = "NumberOfPrefixGroups";
   public static final String COUNTER_NRLARGEPREFIXGROUPS = "NumberOfLargePrefixGroups";
   
+  public static final int MAXCANDIDATESSIZE = 100;
   
   private final Map<String,MutableInt> map = newHashMap();
   
-  private final Map<String,Integer> trieGroupAllocationMap = newHashMap();
-  private int trieGroupAllocationCounter;
+  private int currTrieGroupSize;
   
-  private int numberOfMappers;
   private int minSup;
   
   private String baseTGDir;
-  private int tgStartIndex;
+  private int tgIndex;
+  
+  private String currPrefix = "NOPREFIXYET";
+  private final List<Itemset> itemsetsForPrefix = newArrayList();
   
   private MultipleOutputs<Text,Writable> mos;
   
@@ -118,24 +132,23 @@ public class AprioriPhaseReducer extends Reducer<Text,IntWritable,Text,Writable>
   public void setup(Context context) {
     Configuration conf = context.getConfiguration();
     
-    trieGroupAllocationCounter = 0;
+    currTrieGroupSize = 0;
     
-    numberOfMappers = conf.getInt(NUMBER_OF_MAPPERS_KEY, 1);
     minSup = conf.getInt(MIN_SUP_KEY, 1);
     
     getBaseTGDir(conf);
-    getTgStartIndex(conf);
+    getTgIndex(conf);
     
     mos = new MultipleOutputs<Text,Writable>(context);
   }
   
-  private void getTgStartIndex(Configuration conf) {
+  private void getTgIndex(Configuration conf) {
     try {
       Path path = new Path(baseTGDir);
       FileSystem fs = path.getFileSystem(new Configuration());
       
       if (!fs.exists(path)) {
-        tgStartIndex = 0;
+        tgIndex = 0;
         return;
       }
       
@@ -148,7 +161,7 @@ public class AprioriPhaseReducer extends Reducer<Text,IntWritable,Text,Writable>
         tmp = tmp.substring(tmp.lastIndexOf('/'), tmp.length());
         int ix = Integer.parseInt(tmp.split("-")[1]);
         largestIx = Math.max(largestIx, ix);
-        tgStartIndex += 1;
+        tgIndex += 1;
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -175,36 +188,60 @@ public class AprioriPhaseReducer extends Reducer<Text,IntWritable,Text,Writable>
     }
   }
   
-  private int getTrieGroupAllocation(String string) {
-    int ixEnd = string.lastIndexOf(' ');
-    if (ixEnd == -1) {
-      return 0;
-    }
-    String prefix = string.substring(0, ixEnd);
-    Integer ix = trieGroupAllocationMap.get(prefix);
-    if (ix == null) {
-      ix = trieGroupAllocationCounter + tgStartIndex;
-      trieGroupAllocationMap.put(prefix, ix);
-      trieGroupAllocationCounter = (trieGroupAllocationCounter + 1) % numberOfMappers;
-    }
-    return ix;
-  }
-  
   @Override
   public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+    int sup = getSupport(values);
+    if (sup < minSup) {
+      return;
+    }
+    
+    String itemset = key.toString();
+    String prefix = getPrefix(itemset);
+    
+    if (isSingleton(prefix)) {
+      String baseOutputPath = baseTGDir + "/trieGroup-" + 0;
+      mos.write(key, new Text(sup + ""), baseOutputPath);
+    } else {
+      if (!prefix.equals(currPrefix)) {
+        String baseOutputPath = "fis";
+        if (itemsetsForPrefix.size() > 1) {
+          int size = StringUtils.countMatches(itemset, " ") + 1;
+          currTrieGroupSize += (size * itemsetsForPrefix.size());
+          if (currTrieGroupSize > MAXCANDIDATESSIZE) {
+            currTrieGroupSize = 0;
+            tgIndex++;
+          }
+          baseOutputPath = baseTGDir + "/trieGroup-" + tgIndex;
+        }
+        for (Itemset itemsetToWrite : itemsetsForPrefix) {
+          mos.write(new Text(itemsetToWrite.itemset), new Text(itemsetToWrite.support + ""), baseOutputPath);
+        }
+        itemsetsForPrefix.clear();
+      }
+      currPrefix = prefix;
+      itemsetsForPrefix.add(new Itemset(itemset, sup));
+    }
+    updatePGInfo(itemset, sup);
+  }
+  
+  private static String getPrefix(String itemset) {
+    int ixEnd = itemset.lastIndexOf(' ');
+    if (ixEnd == -1) {
+      return "";
+    }
+    return itemset.substring(0, ixEnd);
+  }
+  
+  private boolean isSingleton(String prefix) {
+    return prefix.equals("");
+  }
+  
+  private int getSupport(Iterable<IntWritable> values) {
     int sup = 0;
     for (IntWritable localSup : values) {
       sup += localSup.get();
     }
-    
-    if (sup >= minSup) {
-      int ix = getTrieGroupAllocation(key.toString());
-      System.out.println(key + " " + ix);
-      String baseOutputPath = baseTGDir + "/trieGroup-" + ix;
-      mos.write(key, new Text(sup + ""), baseOutputPath);
-      context.write(key, new Text(sup + ""));
-      updatePGInfo(key.toString(), sup);
-    }
+    return sup;
   }
   
   private void updatePGInfo(String key, int sup) {
