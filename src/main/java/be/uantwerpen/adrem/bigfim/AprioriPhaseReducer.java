@@ -107,10 +107,11 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
   
   private int minSup;
   
-  private String baseTGDir;
+  private String baseDir;
   private int tgIndex;
   
   private MultipleOutputs<Text,Writable> mos;
+  private String aprioriPhase;
   
   @Override
   public void setup(Context context) {
@@ -118,7 +119,7 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     
     minSup = conf.getInt(MIN_SUP_KEY, 1);
     
-    getBaseTGDir(conf);
+    getBaseDirs(conf);
     getTgIndex(conf);
     
     mos = new MultipleOutputs<Text,Writable>(context);
@@ -126,7 +127,7 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
   
   private void getTgIndex(Configuration conf) {
     try {
-      Path path = new Path(baseTGDir);
+      Path path = new Path(baseDir + "/tg" + aprioriPhase);
       FileSystem fs = path.getFileSystem(new Configuration());
       
       if (!fs.exists(path)) {
@@ -150,7 +151,7 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     }
   }
   
-  private void getBaseTGDir(Configuration conf) {
+  private void getBaseDirs(Configuration conf) {
     try {
       Path path = new Path(conf.get("mapred.output.dir"));
       FileSystem fs = path.getFileSystem(new Configuration());
@@ -159,12 +160,12 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
       dir = dir.substring(dir.indexOf('/'), dir.length());// strip of file:/
       dir = dir.substring(0, dir.lastIndexOf("/_temporary"));// strip of _temporary
       
-      String aprioriPhase = dir.substring(dir.lastIndexOf('/') + 1, dir.length());
+      aprioriPhase = dir.substring(dir.lastIndexOf('/') + 1, dir.length());
       int end = aprioriPhase.indexOf('-');
       end = end > 0 ? end : aprioriPhase.length();
       aprioriPhase = aprioriPhase.substring(2, end);
       
-      baseTGDir = dir.substring(0, dir.lastIndexOf('/')) + "/tg" + aprioriPhase;
+      baseDir = dir.substring(0, dir.lastIndexOf('/'));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -183,10 +184,11 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     
     String baseOutputPath;
     if (supports.size() > 1) {
-      baseOutputPath = baseTGDir + "/trieGroup-" + (prefix.isEmpty() ? 0 : getOutputDirIx(prefix, supports));
+      baseOutputPath = baseDir + "/tg" + aprioriPhase + "/trieGroup-"
+          + (prefix.isEmpty() ? 0 : getOutputDirIx(prefix, supports));
       updatePGInfo(prefix, supports);
     } else {
-      baseOutputPath = "fis";
+      baseOutputPath = baseDir + "/smallfis/fis-" + aprioriPhase;
     }
     
     for (Entry<String,MutableInt> entry : supports.entrySet()) {
