@@ -21,7 +21,6 @@ import static org.easymock.EasyMock.createMock;
 
 import java.util.Set;
 
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -29,7 +28,6 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import be.uantwerpen.adrem.FIMTestCase;
-import be.uantwerpen.adrem.bigfim.AprioriPhaseMapper;
 import be.uantwerpen.adrem.bigfim.AprioriPhaseMapper.Trie;
 
 public class AprioriPhaseMapperTest extends FIMTestCase {
@@ -88,11 +86,11 @@ public class AprioriPhaseMapperTest extends FIMTestCase {
   public void phase_1_With_Input() throws Exception {
     AprioriPhaseMapper.Context ctx = createMock(Mapper.Context.class);
     
-    ctx.write(new Text("1"), new IntWritable(5));
-    ctx.write(new Text("2"), new IntWritable(3));
-    ctx.write(new Text("3"), new IntWritable(6));
-    ctx.write(new Text("4"), new IntWritable(5));
-    ctx.write(new Text("5"), new IntWritable(4));
+    ctx.write(new Text(""), new Text("1 5"));
+    ctx.write(new Text(""), new Text("2 3"));
+    ctx.write(new Text(""), new Text("3 6"));
+    ctx.write(new Text(""), new Text("4 5"));
+    ctx.write(new Text(""), new Text("5 4"));
     
     EasyMock.replay(ctx);
     
@@ -137,13 +135,13 @@ public class AprioriPhaseMapperTest extends FIMTestCase {
   public void phase_2_With_Input() throws Exception {
     AprioriPhaseMapper.Context ctx = createMock(Mapper.Context.class);
     
-    ctx.write(new Text("1 2"), new IntWritable(1));
-    ctx.write(new Text("1 3"), new IntWritable(4));
-    ctx.write(new Text("1 4"), new IntWritable(3));
-    ctx.write(new Text("2 3"), new IntWritable(2));
-    ctx.write(new Text("2 5"), new IntWritable(1));
-    ctx.write(new Text("3 4"), new IntWritable(5));
-    ctx.write(new Text("4 5"), new IntWritable(2));
+    ctx.write(new Text("1"), new Text("2 1"));
+    ctx.write(new Text("1"), new Text("3 4"));
+    ctx.write(new Text("1"), new Text("4 3"));
+    ctx.write(new Text("2"), new Text("3 2"));
+    ctx.write(new Text("2"), new Text("5 1"));
+    ctx.write(new Text("3"), new Text("4 5"));
+    ctx.write(new Text("4"), new Text("5 2"));
     
     EasyMock.replay(ctx);
     
