@@ -145,8 +145,8 @@ public class BigFIMDriver implements Tool {
     System.out.println("[AprioriPhase]: Phase: " + i + " input: " + opt.inputFile + ", output: " + opt.outputDir);
     
     Job job = prepareJob(new Path(opt.inputFile), new Path(outputDir), SplitByKTextInputFormat.class,
-        AprioriPhaseMapper.class, Text.class, IntWritable.class, AprioriPhaseReducer.class, Text.class,
-        IntWritable.class, TextOutputFormat.class);
+        AprioriPhaseMapper.class, Text.class, Text.class, AprioriPhaseReducer.class, Text.class, IntWritable.class,
+        TextOutputFormat.class);
         
     job.setJobName(info);
     job.setJarByClass(BigFIMDriver.class);

@@ -17,11 +17,10 @@
 package be.uantwerpen.adrem.bigfim;
 
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
-import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Sets.newHashSet;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -31,12 +30,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
+//TODO UPDATE THIS EXPLANATION
 /**
  * Reducer class for Apriori phase of BigFIM. This reducer combines the supports of length+1 candidates from different
  * mappers and writes the sets with their cumulated supports when frequent.
@@ -94,45 +93,28 @@ import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
  * }
  * </pre>
  */
-public class AprioriPhaseReducer extends Reducer<Text,IntWritable,Text,Writable> {
-  
-  private static class Itemset {
-    String itemset;
-    int support;
-    
-    public Itemset(String itemset, int support) {
-      this.itemset = itemset;
-      this.support = support;
-    }
-  }
-  
-  private static final String EMPTY_KEY = "";
+public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
   
   public static final String COUNTER_GROUPNAME = "AprioriPhase";
   public static final String COUNTER_NRPREFIXGROUPS = "NumberOfPrefixGroups";
   public static final String COUNTER_NRLARGEPREFIXGROUPS = "NumberOfLargePrefixGroups";
   
-  public static final int MAXCANDIDATESSIZE = 100;
+  public static final int MAXCANDIDATESSIZE = 10000;
   
   private final Map<String,MutableInt> map = newHashMap();
   
-  private int currTrieGroupSize;
+  private int currTrieGroupSize = 0;
   
   private int minSup;
   
   private String baseTGDir;
   private int tgIndex;
   
-  private String currPrefix = "NOPREFIXYET";
-  private final List<Itemset> itemsetsForPrefix = newArrayList();
-  
   private MultipleOutputs<Text,Writable> mos;
   
   @Override
   public void setup(Context context) {
     Configuration conf = context.getConfiguration();
-    
-    currTrieGroupSize = 0;
     
     minSup = conf.getInt(MIN_SUP_KEY, 1);
     
@@ -189,68 +171,70 @@ public class AprioriPhaseReducer extends Reducer<Text,IntWritable,Text,Writable>
   }
   
   @Override
-  public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-    int sup = getSupport(values);
-    if (sup < minSup) {
+  public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    Map<String,MutableInt> supports = getSupports(values);
+    removeLowSupports(supports);
+    
+    if (supports.isEmpty()) {
       return;
     }
     
-    String itemset = key.toString();
-    String prefix = getPrefix(itemset);
+    String prefix = key.toString();
     
-    if (isSingleton(prefix)) {
-      String baseOutputPath = baseTGDir + "/trieGroup-" + 0;
-      mos.write(key, new Text(sup + ""), baseOutputPath);
+    String baseOutputPath;
+    if (supports.size() > 1) {
+      baseOutputPath = baseTGDir + "/trieGroup-" + (prefix.isEmpty() ? 0 : getOutputDirIx(prefix, supports));
+      updatePGInfo(prefix, supports);
     } else {
-      if (!prefix.equals(currPrefix)) {
-        String baseOutputPath = "fis";
-        if (itemsetsForPrefix.size() > 1) {
-          int size = StringUtils.countMatches(itemset, " ") + 1;
-          currTrieGroupSize += (size * itemsetsForPrefix.size());
-          if (currTrieGroupSize > MAXCANDIDATESSIZE) {
-            currTrieGroupSize = 0;
-            tgIndex++;
-          }
-          baseOutputPath = baseTGDir + "/trieGroup-" + tgIndex;
-        }
-        for (Itemset itemsetToWrite : itemsetsForPrefix) {
-          mos.write(new Text(itemsetToWrite.itemset), new Text(itemsetToWrite.support + ""), baseOutputPath);
-        }
-        itemsetsForPrefix.clear();
+      baseOutputPath = "fis";
+    }
+    
+    for (Entry<String,MutableInt> entry : supports.entrySet()) {
+      String itemset = prefix.isEmpty() ? entry.getKey() : prefix + " " + entry.getKey();
+      mos.write(new Text(itemset), new Text(entry.getValue().intValue() + ""), baseOutputPath);
+    }
+  }
+  
+  private int getOutputDirIx(String prefix, Map<String,MutableInt> supports) {
+    int size = (StringUtils.countMatches(prefix, " ") + 2) * supports.size();
+    currTrieGroupSize += size;
+    if (currTrieGroupSize > MAXCANDIDATESSIZE) {
+      currTrieGroupSize = size;
+      tgIndex++;
+    }
+    return tgIndex;
+  }
+  
+  private Map<String,MutableInt> getSupports(Iterable<Text> values) {
+    Map<String,MutableInt> supports = newHashMap();
+    for (Text extensionAndSupport : values) {
+      String[] split = extensionAndSupport.toString().split(" ");
+      String extension = split[0];
+      int localSup = Integer.parseInt(split[1]);
+      MutableInt support = supports.get(extension);
+      if (support == null) {
+        support = new MutableInt(0);
+        supports.put(extension, support);
       }
-      currPrefix = prefix;
-      itemsetsForPrefix.add(new Itemset(itemset, sup));
+      support.add(localSup);
     }
-    updatePGInfo(itemset, sup);
+    return supports;
   }
   
-  private static String getPrefix(String itemset) {
-    int ixEnd = itemset.lastIndexOf(' ');
-    if (ixEnd == -1) {
-      return "";
+  private void removeLowSupports(Map<String,MutableInt> supports) {
+    for (String extension : newHashSet(supports.keySet())) {
+      if (supports.get(extension).intValue() < minSup) {
+        supports.remove(extension);
+      }
     }
-    return itemset.substring(0, ixEnd);
   }
   
-  private boolean isSingleton(String prefix) {
-    return prefix.equals("");
-  }
-  
-  private int getSupport(Iterable<IntWritable> values) {
-    int sup = 0;
-    for (IntWritable localSup : values) {
-      sup += localSup.get();
+  private void updatePGInfo(String prefix, Map<String,MutableInt> supports) {
+    int totSupport = 0;
+    for (MutableInt support : supports.values()) {
+      totSupport += support.intValue();
     }
-    return sup;
-  }
-  
-  private void updatePGInfo(String key, int sup) {
-    int ix = key.lastIndexOf(' ');
-    if (ix == -1) {
-      getFromMap(EMPTY_KEY).add(sup);
-      return;
-    }
-    getFromMap(key.substring(0, ix)).add(sup);
+    getFromMap(prefix).add(totSupport);
   }
   
   private MutableInt getFromMap(String key) {

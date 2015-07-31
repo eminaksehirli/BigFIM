@@ -16,13 +16,13 @@
  */
 package be.uantwerpen.adrem.bigfim;
 
-import static com.google.common.collect.Maps.newHashMap;
-import static org.apache.hadoop.filecache.DistributedCache.getLocalCacheFiles;
 import static be.uantwerpen.adrem.bigfim.Tools.convertLineToSet;
 import static be.uantwerpen.adrem.bigfim.Tools.createCandidates;
 import static be.uantwerpen.adrem.bigfim.Tools.getSingletonsFromSets;
 import static be.uantwerpen.adrem.bigfim.Tools.readItemsetsFromFile;
 import static be.uantwerpen.adrem.util.FIMOptions.DELIMITER_KEY;
+import static com.google.common.collect.Maps.newHashMap;
+import static org.apache.hadoop.filecache.DistributedCache.getLocalCacheFiles;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -35,11 +35,11 @@ import java.util.SortedSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
+//TODO UPDATE THIS EXPLANATION
 /**
  * Mapper class for Apriori phase of BigFIM. Each mapper receives a sub part (horizontal cut) of the dataset and
  * combines a list of base itemsets in candidates of length+1 for its sub database. The latter are counted in the map
@@ -131,7 +131,7 @@ import org.apache.hadoop.mapreduce.Mapper;
  * }
  * </pre>
  */
-public class AprioriPhaseMapper extends Mapper<LongWritable,Text,Text,IntWritable> {
+public class AprioriPhaseMapper extends Mapper<LongWritable,Text,Text,Text> {
   
   static class Trie {
     final int id;
@@ -220,14 +220,14 @@ public class AprioriPhaseMapper extends Mapper<LongWritable,Text,Text,IntWritabl
     int length = builder.length();
     for (Entry<Integer,Trie> entry : trie.children.entrySet()) {
       Trie recTrie = entry.getValue();
-      builder.append(recTrie.id + " ");
       if (recTrie.children.isEmpty()) {
         if (recTrie.support != 0) {
-          Text key = new Text(builder.substring(0, builder.length() - 1));
-          IntWritable value = new IntWritable(recTrie.support);
+          Text key = new Text(builder.substring(0, Math.max(0, builder.length() - 1)));
+          Text value = new Text(recTrie.id + " " + recTrie.support);
           context.write(key, value);
         }
       } else {
+        builder.append(recTrie.id + " ");
         recReport(context, builder, recTrie);
       }
       builder.setLength(length);
