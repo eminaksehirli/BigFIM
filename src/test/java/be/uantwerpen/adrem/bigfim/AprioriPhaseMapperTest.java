@@ -28,7 +28,7 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import be.uantwerpen.adrem.FIMTestCase;
-import be.uantwerpen.adrem.bigfim.AprioriPhaseMapper.Trie;
+import be.uantwerpen.adrem.util.ItemSetTrie;
 
 public class AprioriPhaseMapperTest extends FIMTestCase {
   
@@ -44,26 +44,26 @@ public class AprioriPhaseMapperTest extends FIMTestCase {
     return set;
   }
   
-  private static Trie create_Count_Trie_Empty() {
-    return new Trie(-1);
+  private static ItemSetTrie.SupportCountItemsetTrie create_Count_Trie_Empty() {
+    return new ItemSetTrie.SupportCountItemsetTrie(-1);
   }
   
-  private static Trie create_Count_Trie_Not_Empty() {
-    Trie trie = new Trie(-1);
+  private static ItemSetTrie.SupportCountItemsetTrie create_Count_Trie_Not_Empty() {
+    ItemSetTrie.SupportCountItemsetTrie trie = new ItemSetTrie.SupportCountItemsetTrie(-1);
     
-    Trie child1 = trie.getChild(1);
+    ItemSetTrie child1 = trie.getChild(1);
     child1.getChild(2);
     child1.getChild(3);
     child1.getChild(4);
     
-    Trie child2 = trie.getChild(2);
+    ItemSetTrie child2 = trie.getChild(2);
     child2.getChild(3);
     child2.getChild(5);
     
-    Trie child3 = trie.getChild(3);
+    ItemSetTrie child3 = trie.getChild(3);
     child3.getChild(4);
     
-    Trie child4 = trie.getChild(4);
+    ItemSetTrie child4 = trie.getChild(4);
     child4.getChild(5);
     
     return trie;
@@ -173,7 +173,8 @@ public class AprioriPhaseMapperTest extends FIMTestCase {
     EasyMock.verify(ctx);
   }
   
-  public static AprioriPhaseMapper createMapper(int phase, final Trie trie) throws Exception {
+  public static AprioriPhaseMapper createMapper(int phase, final ItemSetTrie.SupportCountItemsetTrie trie)
+      throws Exception {
     AprioriPhaseMapper mapper = new AprioriPhaseMapper();
     setField(mapper, "singletons", create_Set_1());
     setField(mapper, "phase", phase);

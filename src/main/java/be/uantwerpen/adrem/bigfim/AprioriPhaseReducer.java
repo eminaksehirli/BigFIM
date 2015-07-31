@@ -109,6 +109,7 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
   
   private String baseDir;
   private int tgIndex;
+  private int fisIndex;
   
   private MultipleOutputs<Text,Writable> mos;
   private String aprioriPhase;
@@ -121,6 +122,7 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     
     getBaseDirs(conf);
     getTgIndex(conf);
+    getFisIndex(conf);
     
     mos = new MultipleOutputs<Text,Writable>(context);
   }
@@ -143,8 +145,32 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
         }
         tmp = tmp.substring(tmp.lastIndexOf('/'), tmp.length());
         int ix = Integer.parseInt(tmp.split("-")[1]);
-        largestIx = Math.max(largestIx, ix);
-        tgIndex += 1;
+        tgIndex = Math.max(largestIx, ix) + 1;
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+  
+  private void getFisIndex(Configuration conf) {
+    try {
+      Path path = new Path(baseDir + "/smallfis");
+      FileSystem fs = path.getFileSystem(new Configuration());
+      
+      if (!fs.exists(path)) {
+        fisIndex = 0;
+        return;
+      }
+      
+      int largestIx = 0;
+      for (FileStatus file : fs.listStatus(path)) {
+        String tmp = file.getPath().toString();
+        if (!tmp.contains("fis")) {
+          continue;
+        }
+        tmp = tmp.substring(tmp.lastIndexOf('/'), tmp.length());
+        int ix = Integer.parseInt(tmp.split("-")[2]);
+        fisIndex = Math.max(largestIx, ix) + 1;
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -188,7 +214,7 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
           + (prefix.isEmpty() ? 0 : getOutputDirIx(prefix, supports));
       updatePGInfo(prefix, supports);
     } else {
-      baseOutputPath = baseDir + "/smallfis/fis-" + aprioriPhase;
+      baseOutputPath = baseDir + "/smallfis/fis-" + aprioriPhase + "-" + fisIndex;
     }
     
     for (Entry<String,MutableInt> entry : supports.entrySet()) {
