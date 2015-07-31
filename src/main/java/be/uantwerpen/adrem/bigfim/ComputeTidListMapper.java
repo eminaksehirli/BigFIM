@@ -17,9 +17,9 @@
 package be.uantwerpen.adrem.bigfim;
 
 import static be.uantwerpen.adrem.bigfim.Tools.convertLineToSet;
-import static be.uantwerpen.adrem.bigfim.Tools.readItemsetsFromFileAsIntArray;
+import static be.uantwerpen.adrem.bigfim.Tools.getSingletonsFromCountTrie;
+import static be.uantwerpen.adrem.bigfim.Tools.readCountTrieFromItemSetsFile;
 import static be.uantwerpen.adrem.util.FIMOptions.DELIMITER_KEY;
-import static com.google.common.collect.Sets.newHashSet;
 import static org.apache.hadoop.filecache.DistributedCache.getLocalCacheFiles;
 
 import java.io.IOException;
@@ -161,18 +161,8 @@ public class ComputeTidListMapper extends Mapper<LongWritable,Text,Text,IntArray
     
     if (localCacheFiles != null) {
       String filename = localCacheFiles[0].toString();
-      // List<SortedSet<Integer>> itemsets = readItemsetsFromFile(filename);
-      // Collection<SortedSet<Integer>> candidates = createCandidates(itemsets);
-      // singletons = Tools.getSingletonsFromSets(candidates);
-      //
-      // countTrie = initializeCountTrie(candidates);
-      List<int[]> itemsets = readItemsetsFromFileAsIntArray(filename);
-      
-      Tools.initializeCountTrie(itemsets, countTrie);
-      singletons = newHashSet();
-      Tools.getSingletonsFromCountTrie(countTrie, singletons);
-      
-      phase = itemsets.get(0).length + 1;
+      phase = readCountTrieFromItemSetsFile(filename, countTrie) + 1;
+      singletons = getSingletonsFromCountTrie(countTrie);
     }
     id = context.getTaskAttemptID().getTaskID().getId();
   }

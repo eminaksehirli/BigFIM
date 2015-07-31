@@ -19,20 +19,15 @@ package be.uantwerpen.adrem.bigfim;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
 import static com.google.common.collect.Sets.newHashSet;
-import static com.google.common.collect.Sets.newTreeSet;
-import static java.lang.Integer.valueOf;
 import static java.util.Collections.sort;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.SortedSet;
 
 import be.uantwerpen.adrem.util.ItemSetTrie;
 
@@ -46,75 +41,64 @@ public class Tools {
   // Delimiter for the items
   public static final String ItemDelimiter = " ";
   
-  /**
-   * Reads a list of itemsets from a file. Each line is in transactional format and with integer ids as follows:
-   * 
-   * <pre>
-   * {@code<item1><space><item2>...<itemN><tab><support>}
-   * </pre>
-   * 
-   * @param fileName
-   *          name of the file from which itemsets are read
-   * @return the list of itemsets
-   * @throws NumberFormatException
-   *           thrown if an item is not in integer format
-   * @throws IOException
-   *           thrown if the file can not be found or read
-   */
-  @Deprecated
-  public static List<SortedSet<Integer>> readItemsetsFromFile(String fileName)
+  public static int readCountTrieFromItemSetsFile(String fileName, ItemSetTrie itemsetTrie)
       throws NumberFormatException, IOException {
-    List<SortedSet<Integer>> itemsets = newArrayList();
-    
     String line;
+    int itemsetSize = 0;
     BufferedReader reader = new BufferedReader(new FileReader(fileName));
+    List<int[]> itemsets = newArrayList();
+    int[] prevSet = new int[0];
+    int candidateCount = 0;
     while ((line = reader.readLine()) != null) {
-      String[] splits = line.split(HeadDelimiter)[0].split(ItemDelimiter);
-      SortedSet<Integer> set = newTreeSet();
-      for (String split : splits) {
-        set.add(valueOf(split));
+      String itemset = line.split(HeadDelimiter)[0];
+      String[] split = itemset.split(ItemDelimiter);
+      itemsetSize = split.length;
+      
+      int[] intItemset = new int[split.length];
+      int i = 0;
+      for (String item : split) {
+        intItemset[i++] = Integer.parseInt(item);
       }
-      itemsets.add(set);
+      
+      if (!check(intItemset, prevSet)) {
+        candidateCount += addToTrie(itemsets, itemsetTrie);
+        itemsets.clear();
+      }
+      prevSet = intItemset;
+      
+      itemsets.add(intItemset);
     }
+    candidateCount += addToTrie(itemsets, itemsetTrie);
     reader.close();
-    return itemsets;
+    System.out.println("Candidates directly from file: " + candidateCount);
+    return itemsetSize;
   }
   
-  /**
-   * Reads a list of itemsets from a file. Each line is in transactional format and with integer ids as follows:
-   * 
-   * <pre>
-   * {@code<item1><space><item2>...<itemN><tab><support>}
-   * </pre>
-   * 
-   * @param fileName
-   *          name of the file from which itemsets are read
-   * @return the list of itemsets
-   * @throws NumberFormatException
-   *           thrown if an item is not in integer format
-   * @throws IOException
-   *           thrown if the file can not be found or read
-   */
-  public static List<int[]> readItemsetsFromFileAsIntArray(String fileName) throws NumberFormatException, IOException {
-    List<int[]> itemsets = newArrayList();
-    
-    String line;
-    BufferedReader reader = new BufferedReader(new FileReader(fileName));
-    while ((line = reader.readLine()) != null) {
-      String[] splits = line.split(HeadDelimiter)[0].split(ItemDelimiter);
-      SortedSet<Integer> set = newTreeSet();
-      for (String split : splits) {
-        set.add(valueOf(split));
+  private static int addToTrie(List<int[]> itemsets, ItemSetTrie itemsetTrie) {
+    int candidateCount = 0;
+    ListIterator<int[]> it1 = itemsets.listIterator(0);
+    for (int i = 0; i < itemsets.size() - 1; i++) {
+      int[] itemset1 = it1.next();
+      ListIterator<int[]> it2 = itemsets.listIterator(i + 1);
+      while (it2.hasNext()) {
+        int[] itemset2 = it2.next();
+        ItemSetTrie trie = itemsetTrie;
+        int lastIx = itemset1.length - 1;
+        for (int j = 0; j < lastIx; j++) {
+          trie = trie.getChild(itemset1[j]);
+        }
+        if (itemset1[lastIx] < itemset2[lastIx]) {
+          trie = trie.getChild(itemset1[lastIx]);
+          trie.getChild(itemset2[lastIx]);
+        } else {
+          trie = trie.getChild(itemset2[lastIx]);
+          trie.getChild(itemset1[lastIx]);
+        }
+        
+        candidateCount++;
       }
-      int[] intSet = new int[set.size()];
-      int i = 0;
-      for (Integer item : set) {
-        intSet[i++] = item;
-      }
-      itemsets.add(intSet);
     }
-    reader.close();
-    return itemsets;
+    return candidateCount;
   }
   
   /**
@@ -148,53 +132,10 @@ public class Tools {
     return items;
   }
   
-  /**
-   * Creates candidates of length equal to length+1.
-   * 
-   * @param itemsets
-   *          itemsets of length that are merged together to form length+1 candidates
-   * @return a set of candidates that are combination of the original itemsets and that are of length+1
-   */
-  @Deprecated
-  public static Collection<SortedSet<Integer>> createCandidates(List<SortedSet<Integer>> itemsets) {
-    List<SortedSet<Integer>> candidates = newArrayListWithCapacity(itemsets.size());
-    
-    int i = 0;
-    ListIterator<SortedSet<Integer>> it1 = itemsets.listIterator(i);
-    for (; i < itemsets.size() - 1; i++) {
-      Set<Integer> itemset1 = it1.next();
-      ListIterator<SortedSet<Integer>> it2 = itemsets.listIterator(i + 1);
-      while (it2.hasNext()) {
-        Set<Integer> itemset2 = it2.next();
-        if (check(itemset1, itemset2)) {
-          SortedSet<Integer> set = newTreeSet(itemset1);
-          set.addAll(itemset2);
-          candidates.add(set);
-        } else {
-          continue;
-        }
-      }
-    }
-    
-    return candidates;
-  }
-  
-  @Deprecated
-  private static boolean check(Set<Integer> set1, Set<Integer> set2) {
-    Iterator<Integer> it1 = set1.iterator();
-    Iterator<Integer> it2 = set2.iterator();
-    
-    for (int s = set1.size() - 1; s != 0; s--) {
-      Integer next = it1.next();
-      Integer next2 = it2.next();
-      if (!next.equals(next2)) {
-        return false;
-      }
-    }
-    return true;
-  }
-  
   public static boolean check(int[] set1, int[] set2) {
+    if (set1.length != set2.length) {
+      return false;
+    }
     for (int i = 0, end = set1.length - 1; i < end; i++) {
       if (set1[i] != set2[i]) {
         return false;
@@ -203,63 +144,21 @@ public class Tools {
     return true;
   }
   
-  /**
-   * Gets the unique list of singletons from a collection of words.
-   * 
-   * @param sets
-   *          the complete collection of words
-   * @return list of unique singletons appearing in the collection of words
-   */
-  public static Set<Integer> getSingletonsFromSets(Collection<SortedSet<Integer>> sets) {
+  public static Set<Integer> getSingletonsFromCountTrie(ItemSetTrie trie) {
     Set<Integer> singletons = newHashSet();
-    for (SortedSet<Integer> set : sets) {
-      singletons.addAll(set);
-    }
+    getSingletonsFromCountTrieRec(trie, singletons);
     return singletons;
   }
   
-  public static void initializeCountTrie(List<int[]> itemsets, ItemSetTrie countTrie) {
-    int i = 0;
-    int candidateCount = 0;
-    ListIterator<int[]> it1 = itemsets.listIterator(i);
-    for (; i < itemsets.size() - 1; i++) {
-      int[] itemset1 = it1.next();
-      ListIterator<int[]> it2 = itemsets.listIterator(i + 1);
-      while (it2.hasNext()) {
-        int[] itemset2 = it2.next();
-        if (check(itemset1, itemset2)) {
-          ItemSetTrie trie = countTrie;
-          int lastIx = itemset1.length - 1;
-          for (int j = 0; j < lastIx; j++) {
-            trie = trie.getChild(itemset1[j]);
-          }
-          if (itemset1[lastIx] < itemset2[lastIx]) {
-            trie = trie.getChild(itemset1[lastIx]);
-            trie.getChild(itemset2[lastIx]);
-          } else {
-            trie = trie.getChild(itemset2[lastIx]);
-            trie.getChild(itemset1[lastIx]);
-          }
-          
-          candidateCount++;
-        } else {
-          continue;
-        }
-      }
-    }
-    System.out.println("Candidates: " + candidateCount);
-  }
-  
-  public static void getSingletonsFromCountTrie(ItemSetTrie trie, Set<Integer> singletons) {
+  private static void getSingletonsFromCountTrieRec(ItemSetTrie trie, Set<Integer> singletons) {
     if (trie.id != -1) {
       singletons.add(trie.id);
     }
     for (Entry<Integer,ItemSetTrie> entry : trie.children.entrySet()) {
-      getSingletonsFromCountTrie(entry.getValue(), singletons);
+      getSingletonsFromCountTrieRec(entry.getValue(), singletons);
     }
     if (trie.id == -1) {
       System.out.println("Singletons: " + singletons.size());
     }
   }
-  
 }
