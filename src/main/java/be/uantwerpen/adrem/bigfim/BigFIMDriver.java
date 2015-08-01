@@ -86,12 +86,21 @@ public class BigFIMDriver implements Tool {
     long start = System.currentTimeMillis();
     
     int phase = startAprioriPhase(opt);
-    startCreatePrefixGroups(opt, phase);
-    startMining(opt);
+    if (canStartMining(opt, phase)) {
+      startCreatePrefixGroups(opt, phase);
+      startMining(opt);
+    } else {
+      System.out.println("[BigFim]: No prefixes to extend further");
+    }
     long end = System.currentTimeMillis();
     
     System.out.println("[BigFIM]: Total time: " + (end - start) / 1000 + "s");
     return 1;
+  }
+  
+  private boolean canStartMining(FIMOptions opt, int phase) throws IOException {
+    Path path = new Path(opt.outputDir + separator + "tg" + phase);
+    return phase >= opt.prefixLength && path.getFileSystem(new Configuration()).exists(path);
   }
   
   private static void setConfigurationValues(Configuration conf, FIMOptions opt) {
