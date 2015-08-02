@@ -113,6 +113,7 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
   
   private MultipleOutputs<Text,Writable> mos;
   private String aprioriPhase;
+  private String baseOutputPathFis;
   
   @Override
   public void setup(Context context) {
@@ -123,6 +124,7 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     getBaseDirs(conf);
     getTgIndex(conf);
     getFisIndex(conf);
+    baseOutputPathFis = baseDir + "/shortfis/fis-" + aprioriPhase + "-" + fisIndex;
     
     mos = new MultipleOutputs<Text,Writable>(context);
   }
@@ -208,18 +210,21 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     
     String prefix = key.toString();
     
-    String baseOutputPath;
+    String baseOutputPath = null;
     if (supports.size() > 1) {
       baseOutputPath = baseDir + "/tg" + aprioriPhase + "/trieGroup-"
           + (prefix.isEmpty() ? 0 : getOutputDirIx(prefix, supports));
       updatePGInfo(prefix, supports);
-    } else {
-      baseOutputPath = baseDir + "/smallfis/fis-" + aprioriPhase + "-" + fisIndex;
     }
     
     for (Entry<String,MutableInt> entry : supports.entrySet()) {
       String itemset = prefix.isEmpty() ? entry.getKey() : prefix + " " + entry.getKey();
-      mos.write(new Text(itemset), new Text(entry.getValue().intValue() + ""), baseOutputPath);
+      Text textItemset = new Text(itemset);
+      Text textSupport = new Text(entry.getValue().intValue() + "");
+      if (baseOutputPath != null) {
+        mos.write(textItemset, textSupport, baseOutputPath);
+      }
+      mos.write(textItemset, textSupport, baseOutputPathFis);
     }
   }
   
