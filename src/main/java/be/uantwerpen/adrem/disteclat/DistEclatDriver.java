@@ -16,11 +16,6 @@
  */
 package be.uantwerpen.adrem.disteclat;
 
-import static java.io.File.separator;
-import static java.lang.System.currentTimeMillis;
-import static org.apache.hadoop.filecache.DistributedCache.addCacheFile;
-import static org.apache.hadoop.mapreduce.lib.input.FileInputFormat.setInputPaths;
-import static org.apache.hadoop.mapreduce.lib.output.MultipleOutputs.addNamedOutput;
 import static be.uantwerpen.adrem.hadoop.util.SplitByKTextInputFormat.NUMBER_OF_CHUNKS;
 import static be.uantwerpen.adrem.hadoop.util.Tools.cleanDirs;
 import static be.uantwerpen.adrem.hadoop.util.Tools.prepareJob;
@@ -29,6 +24,11 @@ import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.OUTPUT_DIR_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.PREFIX_LENGTH_KEY;
+import static java.io.File.separator;
+import static java.lang.System.currentTimeMillis;
+import static org.apache.hadoop.filecache.DistributedCache.addCacheFile;
+import static org.apache.hadoop.mapreduce.lib.input.FileInputFormat.setInputPaths;
+import static org.apache.hadoop.mapreduce.lib.output.MultipleOutputs.addNamedOutput;
 
 import java.io.IOException;
 import java.net.URI;
@@ -150,14 +150,14 @@ public class DistEclatDriver implements Tool {
    * @throws ClassNotFoundException
    * @throws InterruptedException
    */
-  private void readHorizontalDb(String outputFile, FIMOptions opt) throws IOException, ClassNotFoundException,
-      InterruptedException {
+  private void readHorizontalDb(String outputFile, FIMOptions opt)
+      throws IOException, ClassNotFoundException, InterruptedException {
     System.out.println("[ItemReading]: input: " + opt.inputFile + ", output: " + outputFile);
     
     Job job = prepareJob(new Path(opt.inputFile), new Path(outputFile), SplitByKTextInputFormat.class,
         ComputeTidListMapper.class, Text.class, IntArrayWritable.class, ItemReaderReducer.class, IntWritable.class,
         Writable.class, TextOutputFormat.class);
-    
+        
     job.setJobName("Read Singletons");
     job.setJarByClass(DistEclatDriver.class);
     job.setNumReduceTasks(1);
@@ -190,9 +190,9 @@ public class DistEclatDriver implements Tool {
    * @throws ClassNotFoundException
    * @throws URISyntaxException
    */
-  private void startPrefixComputation(String inputDir, String outputDir, FIMOptions opt) throws IOException,
-      InterruptedException, ClassNotFoundException, URISyntaxException {
-    
+  private void startPrefixComputation(String inputDir, String outputDir, FIMOptions opt)
+      throws IOException, InterruptedException, ClassNotFoundException, URISyntaxException {
+      
     String inputFile = inputDir + separator + OSingletonsDistribution + rExt;
     String singletonsOrderFile = inputDir + separator + OSingletonsOrder + rExt;
     String singletonsTidsFile = inputDir + separator + OSingletonsTids + rExt;
@@ -202,7 +202,7 @@ public class DistEclatDriver implements Tool {
     Job job = prepareJob(new Path(inputFile), new Path(outputDir), NLineInputFormat.class, PrefixComputerMapper.class,
         Text.class, IntMatrixWritable.class, PrefixComputerReducer.class, IntArrayWritable.class,
         IntMatrixWritable.class, SequenceFileOutputFormat.class);
-    
+        
     job.setJobName("Compute Prefixes");
     job.setJarByClass(DistEclatDriver.class);
     job.setNumReduceTasks(1);
@@ -228,9 +228,9 @@ public class DistEclatDriver implements Tool {
    * @throws ClassNotFoundException
    * @throws URISyntaxException
    */
-  private void startMining(String inputDir, FIMOptions opt) throws IOException, InterruptedException,
-      ClassNotFoundException, URISyntaxException {
-    
+  private void startMining(String inputDir, FIMOptions opt)
+      throws IOException, InterruptedException, ClassNotFoundException, URISyntaxException {
+      
     String inputFilesDir = inputDir;
     String outputFile = opt.outputDir + separator + OFis;
     System.out.println("[StartMining]: input: " + inputFilesDir + ", output: " + outputFile);
@@ -238,7 +238,7 @@ public class DistEclatDriver implements Tool {
     Job job = prepareJob(new Path(inputFilesDir), new Path(outputFile), NoSplitSequenceFileInputFormat.class,
         EclatMinerMapper.class, Text.class, Text.class, EclatMinerReducer.class, Text.class, Text.class,
         TextOutputFormat.class);
-    
+        
     job.setJobName("Start Mining");
     job.setJarByClass(DistEclatDriver.class);
     job.setNumReduceTasks(1);
@@ -253,6 +253,11 @@ public class DistEclatDriver implements Tool {
       inputPaths.add(fstat.getPath());
     }
     
+    if (inputPaths.isEmpty()) {
+      System.out.println("[StartMining]: No prefixes to extend further");
+      return;
+    }
+    
     setInputPaths(job, inputPaths.toArray(new Path[inputPaths.size()]));
     
     runJob(job, "Mining");
@@ -265,6 +270,6 @@ public class DistEclatDriver implements Tool {
   
   @Override
   public void setConf(Configuration arg0) {
-    
+  
   }
 }

@@ -16,13 +16,13 @@
  */
 package be.uantwerpen.adrem.disteclat;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Maps.newHashMap;
-import static java.lang.Integer.parseInt;
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsDistribution;
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsOrder;
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsTids;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
+import static java.lang.Integer.parseInt;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -111,15 +111,13 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
   }
   
   @Override
-  public void reduce(Text key, Iterable<IntArrayWritable> values, Context context) throws IOException,
-      InterruptedException {
-    
+  public void reduce(Text key, Iterable<IntArrayWritable> values, Context context)
+      throws IOException, InterruptedException {
     Map<Integer,IntArrayWritable[]> map = newHashMap();
     for (IntArrayWritable iaw : values) {
       Writable[] w = iaw.get();
       int mapperId = ((IntWritable) w[0]).get();
       int item = ((IntWritable) w[1]).get();
-      
       IntArrayWritable[] tidList = map.get(item);
       if (tidList == null) {
         tidList = new IntArrayWritable[numberOfMappers];
@@ -127,9 +125,10 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
         map.put(item, tidList);
         itemSupports.put(item, new MutableInt());
       }
-      IntWritable[] copy = new IntWritable[w.length - 2];
-      for (int i = 2; i < w.length; i++) {
-        copy[i - 2] = (IntWritable) w[i];
+      IntWritable[] copy = Arrays.copyOf((IntWritable[]) tidList[mapperId].get(),
+          itemSupports.get(item).intValue() + w.length - 2);
+      for (int i = w.length - 1, ix = copy.length - 1; i >= 2; i--) {
+        copy[ix--] = (IntWritable) w[i];
       }
       tidList[mapperId] = new IntArrayWritable(copy);
       itemSupports.get(item).add(w.length - 2);
