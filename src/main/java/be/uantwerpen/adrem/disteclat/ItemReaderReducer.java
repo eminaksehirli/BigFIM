@@ -125,8 +125,8 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
         map.put(item, tidList);
         itemSupports.put(item, new MutableInt());
       }
-      IntWritable[] copy = Arrays.copyOf((IntWritable[]) tidList[mapperId].get(),
-          itemSupports.get(item).intValue() + w.length - 2);
+      IntWritable[] mapperTids = (IntWritable[]) tidList[mapperId].get();
+      IntWritable[] copy = Arrays.copyOf(mapperTids, mapperTids.length + w.length - 2);
       for (int i = w.length - 1, ix = copy.length - 1; i >= 2; i--) {
         copy[ix--] = (IntWritable) w[i];
       }
