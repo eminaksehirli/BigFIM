@@ -169,7 +169,7 @@ public class BigFIMDriver implements Tool {
     }
     
     if (cacheFile != null) {
-      addCacheFile(new URI(cacheFile), conf);
+      addCacheFile(new URI(cacheFile.replace(" ", "%20")), conf);
     }
     
     runJob(job, info);
@@ -207,7 +207,7 @@ public class BigFIMDriver implements Tool {
       setConfigurationValues(conf, opt);
       conf.setInt(PREFIX_LENGTH_KEY, phase);
       
-      addCacheFile(new URI(cacheFile), job.getConfiguration());
+      addCacheFile(new URI(cacheFile.replace(" ", "%20")), job.getConfiguration());
       
       runJob(job, "Prefix Creation");
     }

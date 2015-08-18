@@ -75,7 +75,7 @@ public class BigFIMDriverTest_ extends FIMTestCase {
   }
   
   private void runBigFIMOnce() throws Exception {
-    if (!bigFIMHasRun) {
+    if (!bigFIMHasRun || results == null) {
       try {
         BigFIMDriver.main(new String[] {"-i", input.getAbsolutePath(), "-o", outputDir.getAbsolutePath(), "-s",
             MinSup + "", "-p", "2", "-m", "4"});
@@ -88,12 +88,10 @@ public class BigFIMDriverTest_ extends FIMTestCase {
   }
   
   private void runBigFIMOncePrefixGroupUpdated() throws FileNotFoundException, IOException {
-    if (!bigFIMHasRunPGU) {
+    if (!bigFIMHasRunPGU || resultsPGU == null) {
       try {
-        int tmp = ComputeTidListReducer.MAX_NUMBER_OF_TIDS;
         BigFIMDriver.main(new String[] {"-i", input.getAbsolutePath(), "-o", outputDir.getAbsolutePath(), "-s",
             MinSup + "", "-p", "1", "-m", "4"});
-        ComputeTidListReducer.MAX_NUMBER_OF_TIDS = tmp;
       } catch (Exception e) {
         throw new IllegalStateException(e);
       }

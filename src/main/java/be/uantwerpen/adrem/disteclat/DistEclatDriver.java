@@ -210,8 +210,8 @@ public class DistEclatDriver implements Tool {
     Configuration conf = job.getConfiguration();
     setConfigurationValues(conf, opt);
     
-    addCacheFile(new URI(singletonsOrderFile), job.getConfiguration());
-    addCacheFile(new URI(singletonsTidsFile), job.getConfiguration());
+    addCacheFile(new URI(singletonsOrderFile.replace(" ", "%20")), job.getConfiguration());
+    addCacheFile(new URI(singletonsTidsFile.replace(" ", "%20")), job.getConfiguration());
     
     runJob(job, "Partition Prefixes");
   }

@@ -1,9 +1,9 @@
 package be.uantwerpen.adrem.disteclat;
 
-import static java.io.File.separator;
 import static be.uantwerpen.adrem.DriverTestHelper.Data;
 import static be.uantwerpen.adrem.DriverTestHelper.MinSup;
 import static be.uantwerpen.adrem.DriverTestHelper.readResults;
+import static java.io.File.separator;
 
 import java.io.File;
 import java.util.List;
@@ -14,7 +14,6 @@ import org.junit.Test;
 
 import be.uantwerpen.adrem.DriverTestHelper;
 import be.uantwerpen.adrem.FIMTestCase;
-import be.uantwerpen.adrem.disteclat.DistEclatDriver;
 
 public class DistEclatDriverTest_ extends FIMTestCase {
   static final String Output_File_Name = "fis/part-r-00000";
