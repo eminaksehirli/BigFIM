@@ -31,8 +31,6 @@ import org.junit.Test;
 
 import be.uantwerpen.adrem.DriverTestHelper;
 import be.uantwerpen.adrem.FIMTestCase;
-import be.uantwerpen.adrem.bigfim.BigFIMDriver;
-import be.uantwerpen.adrem.bigfim.ComputeTidListReducer;
 
 public class BigFIMDriverTest_ extends FIMTestCase {
   private static boolean bigFIMHasRun = false;
@@ -93,7 +91,6 @@ public class BigFIMDriverTest_ extends FIMTestCase {
     if (!bigFIMHasRunPGU) {
       try {
         int tmp = ComputeTidListReducer.MAX_NUMBER_OF_TIDS;
-        ComputeTidListReducer.MAX_NUMBER_OF_TIDS = 18;
         BigFIMDriver.main(new String[] {"-i", input.getAbsolutePath(), "-o", outputDir.getAbsolutePath(), "-s",
             MinSup + "", "-p", "1", "-m", "4"});
         ComputeTidListReducer.MAX_NUMBER_OF_TIDS = tmp;

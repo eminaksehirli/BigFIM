@@ -141,7 +141,6 @@ public class ComputeTidListReducer extends Reducer<Text,IntArrayWritable,IntArra
     getPgStartIndex(conf);
     
     mos = new MultipleOutputs<IntArrayWritable,IntMatrixWritable>(context);
-    
   }
   
   private void getPgStartIndex(Configuration conf) {
@@ -173,13 +172,21 @@ public class ComputeTidListReducer extends Reducer<Text,IntArrayWritable,IntArra
   private void getBasePGDir(Configuration conf) {
     try {
       Path path = new Path(conf.get("mapred.output.dir"));
-      FileSystem fs = path.getFileSystem(new Configuration());
+      FileSystem fs = path.getFileSystem(conf);
       
-      String dir = fs.listStatus(path)[0].getPath().toString();
-      dir = dir.substring(dir.indexOf('/'), dir.length());// strip of file:/
-      dir = dir.substring(0, dir.lastIndexOf("/_temporary"));// strip of _temporary
-      
-      basePGDir = dir.substring(0, dir.lastIndexOf('/')) + "/pg";
+      if (fs.listStatus(path).length > 0) {
+        String dir = fs.listStatus(path)[0].getPath().toString();
+        if (dir.startsWith("file:/")) {
+          dir = dir.substring(dir.indexOf('/'), dir.length());// strip of file:/
+        }
+        if (dir.endsWith("/_temporary")) {
+          dir = dir.substring(0, dir.lastIndexOf("/_temporary"));// strip of _temporary
+        }
+        
+        basePGDir = dir.substring(0, dir.lastIndexOf('/')) + "/pg";
+      } else {
+        basePGDir = "pg";
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }

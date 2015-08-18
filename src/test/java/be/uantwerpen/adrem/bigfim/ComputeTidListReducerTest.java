@@ -16,14 +16,14 @@
  */
 package be.uantwerpen.adrem.bigfim;
 
-import static com.google.common.collect.Lists.newArrayListWithCapacity;
-import static org.easymock.EasyMock.createMock;
 import static be.uantwerpen.adrem.bigfim.ComputeTidListMapperTest.newIAW;
 import static be.uantwerpen.adrem.hadoop.util.IntArrayWritable.EmptyIaw;
 import static be.uantwerpen.adrem.hadoop.util.IntMatrixWritable.EmptyImw;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.SUBDB_SIZE;
+import static com.google.common.collect.Lists.newArrayListWithCapacity;
+import static org.easymock.EasyMock.createMock;
 
 import java.util.List;
 
@@ -36,7 +36,6 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import be.uantwerpen.adrem.FIMTestCase;
-import be.uantwerpen.adrem.bigfim.ComputeTidListReducer;
 import be.uantwerpen.adrem.hadoop.util.IntArrayWritable;
 import be.uantwerpen.adrem.hadoop.util.IntMatrixWritable;
 
@@ -78,21 +77,21 @@ public class ComputeTidListReducerTest extends FIMTestCase {
     return list;
   }
   
-  private Configuration createConfiguration() {
+  private Configuration createConfiguration() throws Exception {
     Configuration conf = new Configuration();
     conf.setInt(MIN_SUP_KEY, 1);
     conf.setInt(NUMBER_OF_MAPPERS_KEY, 2);
     conf.setInt(SUBDB_SIZE, 10);
+    conf.setStrings("mapred.output.dir", "file:///out");
     return conf;
   }
   
   @Test
   public void One_PG_One_Item() throws Exception {
     MultipleOutputs<IntArrayWritable,IntMatrixWritable> mos = createMock(MultipleOutputs.class);
-    
-    mos.write(newIAW(1), EmptyImw, "bucket-0");
-    mos.write(newIAW(0), new IntMatrixWritable(newIAW(0, 1, 2, 4, 7, 9), newIAW(0, 1, 2, 3, 5, 6, 8)), "bucket-0");
-    mos.write(EmptyIaw, EmptyImw, "bucket-0");
+    mos.write(newIAW(1), EmptyImw, "pg/bucket-0");
+    mos.write(newIAW(0), new IntMatrixWritable(newIAW(0, 1, 2, 4, 7, 9), newIAW(0, 1, 2, 3, 5, 6, 8)), "pg/bucket-0");
+    mos.write(EmptyIaw, EmptyImw, "pg/bucket-0");
     mos.close();
     
     Reducer.Context ctx = createMock(Reducer.Context.class);
@@ -115,11 +114,11 @@ public class ComputeTidListReducerTest extends FIMTestCase {
   public void One_PG_N_Items() throws Exception {
     MultipleOutputs<IntArrayWritable,IntMatrixWritable> mos = createMock(MultipleOutputs.class);
     
-    mos.write(newIAW(1), EmptyImw, "bucket-0");
-    mos.write(newIAW(0), new IntMatrixWritable(newIAW(0, 1, 2, 4, 7, 9), newIAW(0, 1, 2, 3, 5, 6, 8)), "bucket-0");
-    mos.write(newIAW(1), new IntMatrixWritable(newIAW(1, 2, 3), newIAW(4, 5, 6)), "bucket-0");
-    mos.write(newIAW(3), new IntMatrixWritable(newIAW(4, 7, 9), newIAW(4, 7, 9)), "bucket-0");
-    mos.write(EmptyIaw, EmptyImw, "bucket-0");
+    mos.write(newIAW(1), EmptyImw, "pg/bucket-0");
+    mos.write(newIAW(0), new IntMatrixWritable(newIAW(0, 1, 2, 4, 7, 9), newIAW(0, 1, 2, 3, 5, 6, 8)), "pg/bucket-0");
+    mos.write(newIAW(1), new IntMatrixWritable(newIAW(1, 2, 3), newIAW(4, 5, 6)), "pg/bucket-0");
+    mos.write(newIAW(3), new IntMatrixWritable(newIAW(4, 7, 9), newIAW(4, 7, 9)), "pg/bucket-0");
+    mos.write(EmptyIaw, EmptyImw, "pg/bucket-0");
     mos.close();
     
     Reducer.Context ctx = createMock(Reducer.Context.class);
@@ -142,16 +141,16 @@ public class ComputeTidListReducerTest extends FIMTestCase {
   public void N_PG_N_Items() throws Exception {
     MultipleOutputs<IntArrayWritable,IntMatrixWritable> mos = createMock(MultipleOutputs.class);
     
-    mos.write(newIAW(1), EmptyImw, "bucket-0");
-    mos.write(newIAW(0), new IntMatrixWritable(newIAW(0, 1, 2, 4, 7, 9), newIAW(0, 1, 2, 3, 5, 6, 8)), "bucket-0");
-    mos.write(newIAW(1), new IntMatrixWritable(newIAW(1, 2, 3), newIAW(4, 5, 6)), "bucket-0");
-    mos.write(newIAW(3), new IntMatrixWritable(newIAW(4, 7, 9), newIAW(4, 7, 9)), "bucket-0");
-    mos.write(EmptyIaw, EmptyImw, "bucket-0");
+    mos.write(newIAW(1), EmptyImw, "pg/bucket-0");
+    mos.write(newIAW(0), new IntMatrixWritable(newIAW(0, 1, 2, 4, 7, 9), newIAW(0, 1, 2, 3, 5, 6, 8)), "pg/bucket-0");
+    mos.write(newIAW(1), new IntMatrixWritable(newIAW(1, 2, 3), newIAW(4, 5, 6)), "pg/bucket-0");
+    mos.write(newIAW(3), new IntMatrixWritable(newIAW(4, 7, 9), newIAW(4, 7, 9)), "pg/bucket-0");
+    mos.write(EmptyIaw, EmptyImw, "pg/bucket-0");
     
-    mos.write(newIAW(2), EmptyImw, "bucket-1");
-    mos.write(newIAW(1), new IntMatrixWritable(newIAW(1, 4, 7, 8), newIAW(1, 5, 6, 8)), "bucket-1");
-    mos.write(newIAW(2), new IntMatrixWritable(newIAW(3, 5, 7), newIAW(1, 2, 3, 4, 5, 6, 7, 8, 9)), "bucket-1");
-    mos.write(EmptyIaw, EmptyImw, "bucket-1");
+    mos.write(newIAW(2), EmptyImw, "pg/bucket-1");
+    mos.write(newIAW(1), new IntMatrixWritable(newIAW(1, 4, 7, 8), newIAW(1, 5, 6, 8)), "pg/bucket-1");
+    mos.write(newIAW(2), new IntMatrixWritable(newIAW(3, 5, 7), newIAW(1, 2, 3, 4, 5, 6, 7, 8, 9)), "pg/bucket-1");
+    mos.write(EmptyIaw, EmptyImw, "pg/bucket-1");
     mos.close();
     
     Reducer.Context ctx = createMock(Reducer.Context.class);
