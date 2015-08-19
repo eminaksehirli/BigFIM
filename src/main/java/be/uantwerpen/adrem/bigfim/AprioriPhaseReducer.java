@@ -184,16 +184,20 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
       Path path = new Path(conf.get("mapred.output.dir"));
       FileSystem fs = path.getFileSystem(new Configuration());
       
-      String dir = fs.listStatus(path)[0].getPath().toString();
-      dir = dir.substring(dir.indexOf('/'), dir.length());// strip of file:/
-      dir = dir.substring(0, dir.lastIndexOf("/_temporary"));// strip of _temporary
-      
-      aprioriPhase = dir.substring(dir.lastIndexOf('/') + 1, dir.length());
-      int end = aprioriPhase.indexOf('-');
-      end = end > 0 ? end : aprioriPhase.length();
-      aprioriPhase = aprioriPhase.substring(2, end);
-      
-      baseDir = dir.substring(0, dir.lastIndexOf('/'));
+      if (fs.listStatus(path).length > 0) {
+        String dir = fs.listStatus(path)[0].getPath().toString();
+        dir = dir.substring(dir.indexOf('/'), dir.length());// strip of file:/
+        dir = dir.substring(0, dir.lastIndexOf("/_temporary"));// strip of _temporary
+        
+        aprioriPhase = dir.substring(dir.lastIndexOf('/') + 1, dir.length());
+        int end = aprioriPhase.indexOf('-');
+        end = end > 0 ? end : aprioriPhase.length();
+        aprioriPhase = aprioriPhase.substring(2, end);
+        
+        baseDir = dir.substring(0, dir.lastIndexOf('/'));
+      } else {
+        baseDir = "tmp";
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }
