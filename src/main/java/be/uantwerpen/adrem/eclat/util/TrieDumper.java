@@ -16,11 +16,15 @@
  */
 package be.uantwerpen.adrem.eclat.util;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newTreeSet;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
 
 /**
  * Prints the itemsets represented by a Trie String. For extra information on Trie Printer see tests.
@@ -34,37 +38,33 @@ public class TrieDumper {
   static PrintStream out = System.out;
   
   public static void printAsSets(String trieString) {
-    StringBuilder itemsetBuilder = new StringBuilder();
-    StringBuilder supportBuilder = new StringBuilder();
-    boolean readSupport = false;
+    List<String> items = newArrayList();
+    StringBuilder builder = new StringBuilder();
+    trieString = trieString.split("\t")[1];
     for (int i = 0; i < trieString.length(); i++) {
       char c = trieString.charAt(i);
       if (c == SYMBOL) {
-        if (itemsetBuilder.length() == 0) {
-          out.println("already 0");
+        if (items.size() == 0) {
+          // out.println("already 0");
         } else {
-          itemsetBuilder.setLength(itemsetBuilder.length() - 1);
-          int newLength = itemsetBuilder.lastIndexOf(" ") + 1;
-          itemsetBuilder.setLength(newLength);
+          items.remove(items.size() - 1);
         }
       } else if (c == SEPARATOR) {
-        itemsetBuilder.append(' ');
+        items.add(builder.toString());
+        builder.setLength(0);
       } else if (c == OPENSUP) {
-        readSupport = true;
-        if (itemsetBuilder.charAt(itemsetBuilder.length() - 1) != ' ') {
-          itemsetBuilder.append(' ');
+        if (builder.length() != 0) {
+          items.add(builder.toString());
+          builder.setLength(0);
         }
       } else if (c == CLOSESUP) {
-        out.print(itemsetBuilder.toString());
-        out.println("(" + supportBuilder.toString() + ")");
-        supportBuilder.setLength(0);
-        readSupport = false;
-      } else {
-        if (readSupport) {
-          supportBuilder.append(c);
-        } else {
-          itemsetBuilder.append(c);
+        for (String item : newTreeSet(items)) {
+          out.print(item + " ");
         }
+        out.println("(" + builder.toString() + ")");
+        builder.setLength(0);
+      } else {
+        builder.append(c);
       }
     }
   }
