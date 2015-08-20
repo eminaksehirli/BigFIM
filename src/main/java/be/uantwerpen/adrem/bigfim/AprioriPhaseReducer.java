@@ -211,7 +211,7 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     String prefix = key.toString();
     
     String baseOutputPath = null;
-    if (supports.size() > 1) {
+    if (!supports.isEmpty()) {
       baseOutputPath = baseDir + "/tg" + aprioriPhase + "/trieGroup-"
           + (prefix.isEmpty() ? 0 : getOutputDirIx(prefix, supports));
       updatePGInfo(prefix, supports);
