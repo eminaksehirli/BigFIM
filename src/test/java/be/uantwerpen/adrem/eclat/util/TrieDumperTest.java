@@ -25,8 +25,6 @@ import java.io.PrintStream;
 import org.junit.Before;
 import org.junit.Test;
 
-import be.uantwerpen.adrem.eclat.util.TrieDumper;
-
 public class TrieDumperTest {
   
   private OutputStream out;
@@ -39,7 +37,7 @@ public class TrieDumperTest {
   
   @Test
   public void prints_Supports_In_Paranthesis() {
-    String str = "1 2 30(12)";
+    String str = "1\t1|2|30(12)";
     String[] actuals = getPrintOut(str);
     
     final String[] expecteds = new String[] {"1 2 30 (12)"};
@@ -48,21 +46,21 @@ public class TrieDumperTest {
   }
   
   @Test
-  public void pipes_Are_The_Separators_For_Closed_Items() {
-    String str = "1 2 30(12)8|9|19(10)";
+  public void pipe_Means_One_Level_Down() {
+    String str = "2\t1|2|30(12)8|9|19(10)";
     String[] actuals = getPrintOut(str);
     
-    final String[] expecteds = new String[] {"1 2 30 (12)", "1 2 30 8 9 19 (10)"};
+    final String[] expecteds = new String[] {"1 2 30 (12)", "1 19 2 30 8 9 (10)"};
     
     assertArrayEquals(expecteds, actuals);
   }
   
   @Test
   public void dollar_Means_One_Level_Up() {
-    String str = "1 2 30(12)8|9(10)$5(11)";
+    String str = "1\t1|2|30(12)8|9(10)$5(11)";
     String[] actuals = getPrintOut(str);
     
-    final String[] expecteds = new String[] {"1 2 30 (12)", "1 2 30 8 9 (10)", "1 2 30 8 5 (11)"};
+    final String[] expecteds = new String[] {"1 2 30 (12)", "1 2 30 8 9 (10)", "1 2 30 5 8 (11)"};
     
     assertArrayEquals(expecteds, actuals);
   }

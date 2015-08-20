@@ -30,6 +30,7 @@ import java.util.List;
  * Prints the itemsets represented by a Trie String. For extra information on Trie Printer see tests.
  */
 public class TrieDumper {
+  public static final String COUNT_SEPARATOR = "\t";
   public static final char SYMBOL = '$';
   public static final char SEPARATOR = '|';
   public static final char OPENSUP = '(';
@@ -40,7 +41,7 @@ public class TrieDumper {
   public static void printAsSets(String trieString) {
     List<String> items = newArrayList();
     StringBuilder builder = new StringBuilder();
-    trieString = trieString.split("\t")[1];
+    trieString = trieString.split(COUNT_SEPARATOR)[1];
     for (int i = 0; i < trieString.length(); i++) {
       char c = trieString.charAt(i);
       if (c == SYMBOL) {
@@ -58,6 +59,8 @@ public class TrieDumper {
           builder.setLength(0);
         }
       } else if (c == CLOSESUP) {
+        System.out.println(items);
+        System.out.println(newTreeSet(items));
         for (String item : newTreeSet(items)) {
           out.print(item + " ");
         }
