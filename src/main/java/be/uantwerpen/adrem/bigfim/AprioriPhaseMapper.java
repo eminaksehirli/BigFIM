@@ -74,18 +74,18 @@ import be.uantwerpen.adrem.util.ItemSetTrie.SupportCountItemsetTrie;
  * 20             "2 3"                     | Mapper 3
  * 
  * Output:
- * Text           IntWritable
- * (Itemset)      (Support)
- * "1"            2                         | Mapper 1
- * "2"            1                         | Mapper 1
+ * Text           Text
+ * (Prefix)       (Item + Support)
+ * ""             "1 2"                     | Mapper 1
+ * ""             "2 1"                     | Mapper 1
  * 
- * "1"            2                         | Mapper 2
- * "2"            2                         | Mapper 2
- * "3"            1                         | Mapper 2
+ * ""             "1 2"                     | Mapper 2
+ * ""             "2 2"                     | Mapper 2
+ * ""             "3 1"                     | Mapper 2
  * 
- * "1"            1                         | Mapper 3
- * "2"            2                         | Mapper 3
- * "3"            1                         | Mapper 3
+ * ""             "1 1"                     | Mapper 3
+ * ""             "2 2"                     | Mapper 3
+ * ""             "3 1"                     | Mapper 3
  * 
  * 
  * 
@@ -115,16 +115,16 @@ import be.uantwerpen.adrem.util.ItemSetTrie.SupportCountItemsetTrie;
  * 20             "2 3"             | Mapper 3
  * 
  * Output:
- * Text           IntWritable
+ * Text           Text
  * (Itemset)      (Support)
- * "1 2"          1                 | Mapper 1
+ * "1"            "2 1"             | Mapper 1
  * 
- * "1 2"          2                 | Mapper 2
- * "1 3"          1                 | Mapper 2
- * "2 3"          1                 | Mapper 2
+ * "1"            "2 2"             | Mapper 2
+ * "1"            "3 1"             | Mapper 2
+ * "2"            "3 1"             | Mapper 2
  * 
- * "1 2"          1                 | Mapper 3
- * "2 3"          1                 | Mapper 3
+ * "1"            "2 1"             | Mapper 3
+ * "2"            "3 1"             | Mapper 3
  * }
  * </pre>
  */

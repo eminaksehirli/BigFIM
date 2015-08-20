@@ -35,7 +35,6 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
-//TODO UPDATE THIS EXPLANATION
 /**
  * Reducer class for Apriori phase of BigFIM. This reducer combines the supports of length+1 candidates from different
  * mappers and writes the sets with their cumulated supports when frequent.
@@ -59,11 +58,9 @@ import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
  * ==========================
  * 
  * Input:
- * Text           Iterable<IntWritable>
- * (Itemset)      (<Support in sub databases>)
- * 1              <2,2,1>
- * 2              <1,2,2>
- * 3              <1,1>
+ * Text           Iterable<Text>
+ * (Prefix)       (<Item + Support in sub databases>)
+ * ""             <"1 2", "1 2", "1 1", "2 1", "2 2", "2 2", "3 1", "3 1">
  * 
  * Output:
  * Text           Writable
@@ -78,11 +75,10 @@ import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
  * ==========================
  * 
  * Input:
- * Text           Iterable<IntWritable>
- * (Itemset)      (<Support in sub databases>)
- * 1 2            <1,2,1>
- * 1 3            <1>
- * 2 3            <1,1>
+ * Text           Iterable<Text>
+ * (Prefix)       (<Support in sub databases>)
+ * "1"            <"2 1", "2 2", "2 1", "3 1">
+ * "2"            <"3 1", "3 1">
  * 
  * Output:
  * Text           Writable
