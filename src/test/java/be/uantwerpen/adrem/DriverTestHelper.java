@@ -34,13 +34,13 @@ import be.uantwerpen.adrem.eclat.util.TrieDumper;
 
 public class DriverTestHelper {
   
-  static int[][] Expecteds = new int[][] { {1, 2, 3}, {4, 5, 6, 7}, {1, 3, 7}};
-  public static int[][] Length_2_FIs = new int[][] { {1, 3}, {1, 7}, {3, 7}, {2, 6}, {2, 3}, {6, 7}};
+  static int[][] Expecteds = new int[][] {{1, 2, 3}, {4, 5, 6, 7}, {1, 3, 7}};
+  public static int[][] Length_2_FIs = new int[][] {{1, 3}, {1, 7}, {3, 7}, {2, 6}, {2, 3}, {6, 7}};
   // "2 3" and "6 7" are reported as short FIs because of supersetting.
   
-  public static String[] Data = new String[] {"1 2 3", "1 2 3", "1 2 3", "1 2 3", "1 4 5 6 7", "2 4 5 6 7",
-      "3 4 5 6 7", "4 5 6 7", "1 3 7", "1 3 7", "1 3 7", "1 3 7", "2 6", "2 6"};
-  
+  public static String[] Data = new String[] {"1 2 3", "1 2 3", "1 2 3", "1 2 3", "1 4 5 6 7", "2 4 5 6 7", "3 4 5 6 7",
+      "4 5 6 7", "1 3 7", "1 3 7", "1 3 7", "1 3 7", "2 6", "2 6"};
+      
   public static final int MinSup = 4;
   private final List<Set<Integer>> expecteds;
   
@@ -101,7 +101,7 @@ public class DriverTestHelper {
     
     List<String> actualStrings = newArrayListWithCapacity(10);
     while (sc.hasNextLine()) {
-      String itemsetStr = sc.nextLine().split("\t")[1];
+      String itemsetStr = sc.nextLine();
       
       StringBuilder actualStr = new StringBuilder();
       
