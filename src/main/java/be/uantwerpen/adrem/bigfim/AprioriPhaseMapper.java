@@ -33,7 +33,6 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-//TODO UPDATE THIS EXPLANATION
 import be.uantwerpen.adrem.util.ItemSetTrie;
 import be.uantwerpen.adrem.util.ItemSetTrie.SupportCountItemsetTrie;
 
