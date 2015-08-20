@@ -86,11 +86,15 @@ public class BigFIMDriver implements Tool {
     long start = System.currentTimeMillis();
     
     int phase = startAprioriPhase(opt);
-    if (canStartMining(opt, phase)) {
+    if (canStartPrefixGeneration(opt, phase)) {
       startCreatePrefixGroups(opt, phase);
-      startMining(opt);
+      if (canStartMining(opt)) {
+        startMining(opt);
+      } else {
+        System.out.println("[BigFIM]: No prefix groups found");
+      }
     } else {
-      System.out.println("[BigFim]: No prefixes to extend further");
+      System.out.println("[BigFIM]: No prefixes to extend further");
     }
     long end = System.currentTimeMillis();
     
@@ -98,9 +102,14 @@ public class BigFIMDriver implements Tool {
     return 1;
   }
   
-  private boolean canStartMining(FIMOptions opt, int phase) throws IOException {
+  private boolean canStartPrefixGeneration(FIMOptions opt, int phase) throws IOException {
     Path path = new Path(opt.outputDir + separator + "tg" + phase);
     return phase >= opt.prefixLength && path.getFileSystem(new Configuration()).exists(path);
+  }
+  
+  private boolean canStartMining(FIMOptions opt) throws IOException {
+    Path path = new Path(opt.outputDir + separator + "pg");
+    return path.getFileSystem(new Configuration()).exists(path);
   }
   
   private static void setConfigurationValues(Configuration conf, FIMOptions opt) {
