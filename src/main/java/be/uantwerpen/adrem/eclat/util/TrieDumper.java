@@ -59,8 +59,6 @@ public class TrieDumper {
           builder.setLength(0);
         }
       } else if (c == CLOSESUP) {
-        System.out.println(items);
-        System.out.println(newTreeSet(items));
         for (String item : newTreeSet(items)) {
           out.print(item + " ");
         }
