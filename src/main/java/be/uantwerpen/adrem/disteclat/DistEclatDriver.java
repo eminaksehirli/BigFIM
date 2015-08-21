@@ -77,7 +77,7 @@ public class DistEclatDriver implements Tool {
   public static final String OSingletonsTids = "singletonsTids";
   
   // output files second MapReduce cycle
-  public static final String OShortFIs = "shortFIs";
+  public static final String OShortFIs = "shortfis";
   
   // output files third MapReduce cycle
   private static final String OFis = "fis";
