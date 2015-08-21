@@ -18,7 +18,6 @@ package be.uantwerpen.adrem.eclat.util;
 
 import static be.uantwerpen.adrem.util.Tools.intersect;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +40,8 @@ public class PrefixItemTIDsReporter implements SetReporter {
   private final List<Item> singletons;
   private final Map<Integer,Integer> orderMap;
   
-  public PrefixItemTIDsReporter(Context context, int prefixLength, List<Item> singletons, Map<Integer,Integer> orderMap) {
+  public PrefixItemTIDsReporter(Context context, int prefixLength, List<Item> singletons,
+      Map<Integer,Integer> orderMap) {
     this.context = context;
     this.prefixLength = prefixLength;
     this.singletons = singletons;
@@ -52,7 +52,7 @@ public class PrefixItemTIDsReporter implements SetReporter {
   public void report(int[] itemset, int support) {
     StringBuilder sb = new StringBuilder();
     if (itemset.length < prefixLength) {
-      System.out.println("Found a short fis:" + Arrays.toString(itemset));
+      // System.out.println("Found a short fis:" + Arrays.toString(itemset));
       try {
         context.write(ShortKey, new IntMatrixWritable(IntArrayWritable.of(itemset), IntArrayWritable.of(support)));
       } catch (Exception e) {
@@ -89,7 +89,7 @@ public class PrefixItemTIDsReporter implements SetReporter {
   
   @Override
   public void close() {
-    
+  
   }
   
   private TidList computeTids(int[] itemset) {
