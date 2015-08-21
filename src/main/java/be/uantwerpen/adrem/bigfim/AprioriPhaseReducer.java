@@ -17,6 +17,10 @@
 package be.uantwerpen.adrem.bigfim;
 
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OShortFIs;
+import static be.uantwerpen.adrem.eclat.util.TrieDumper.CLOSESUP;
+import static be.uantwerpen.adrem.eclat.util.TrieDumper.OPENSUP;
+import static be.uantwerpen.adrem.eclat.util.TrieDumper.SEPARATOR;
+import static be.uantwerpen.adrem.eclat.util.TrieDumper.SYMBOL;
 import static be.uantwerpen.adrem.hadoop.util.Tools.createPath;
 import static be.uantwerpen.adrem.hadoop.util.Tools.getJobAbsoluteOutputDir;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
@@ -24,6 +28,7 @@ import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.max;
+import static java.lang.String.valueOf;
 
 import java.io.IOException;
 import java.util.Map;
@@ -220,14 +225,15 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
   private void writeShortFis(String prefix, Map<String,MutableInt> supports) throws IOException, InterruptedException {
     StringBuilder builder = new StringBuilder();
     if (!prefix.isEmpty()) {
-      builder.append(prefix.replace(" ", "|"));
-      builder.append("|");
+      builder.append(prefix.replace(" ", valueOf(SEPARATOR)));
+      builder.append(SEPARATOR);
     }
     for (Entry<String,MutableInt> entry : supports.entrySet()) {
       builder.append(entry.getKey());
-      builder.append("(");
+      builder.append(OPENSUP);
       builder.append(entry.getValue().intValue());
-      builder.append(")$");
+      builder.append(CLOSESUP);
+      builder.append(SYMBOL);
     }
     mos.write(new Text("" + supports.size()), new Text(builder.substring(0, builder.length() - 1)), baseOutputPathFis);
   }
