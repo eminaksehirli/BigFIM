@@ -21,6 +21,7 @@ import static be.uantwerpen.adrem.hadoop.util.IntArrayWritable.EmptyIaw;
 import static be.uantwerpen.adrem.hadoop.util.IntMatrixWritable.EmptyImw;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
+import static be.uantwerpen.adrem.util.FIMOptions.OUTPUT_DIR_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.SUBDB_SIZE;
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
 import static org.easymock.EasyMock.createMock;
@@ -82,7 +83,7 @@ public class ComputeTidListReducerTest extends FIMTestCase {
     conf.setInt(MIN_SUP_KEY, 1);
     conf.setInt(NUMBER_OF_MAPPERS_KEY, 2);
     conf.setInt(SUBDB_SIZE, 10);
-    conf.setStrings("mapred.output.dir", "file:///out");
+    conf.setStrings(OUTPUT_DIR_KEY, "file:///out");
     return conf;
   }
   

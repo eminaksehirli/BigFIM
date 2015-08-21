@@ -116,9 +116,7 @@ public class Tools {
       Path path = new Path(context.getConfiguration().get(OUTPUT_DIR_KEY));
       FileSystem fs = path.getFileSystem(context.getConfiguration());
       return fs.getFileStatus(path).getPath().toString();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    } catch (IOException e) {}
     return "";
   }
   
