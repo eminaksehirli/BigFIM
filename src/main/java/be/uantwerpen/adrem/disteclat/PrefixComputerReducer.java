@@ -16,6 +16,7 @@
  */
 package be.uantwerpen.adrem.disteclat;
 
+import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OShortFIs;
 import static be.uantwerpen.adrem.hadoop.util.IntArrayWritable.EmptyIaw;
 import static be.uantwerpen.adrem.hadoop.util.IntMatrixWritable.EmptyImw;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
@@ -170,17 +171,20 @@ public class PrefixComputerReducer extends Reducer<Text,IntMatrixWritable,IntArr
   }
   
   private void printShorts(Iterable<IntMatrixWritable> values) {
+    StringBuilder builder = new StringBuilder();
     for (IntMatrixWritable imw : values) {
+      builder.setLength(0);
       IntArrayWritable[] iaw = (IntArrayWritable[]) imw.get();
       final IntArrayWritable is = iaw[0];
       Writable[] itemset = is.get();
-      shortFIsOut.print("1\t");
+      builder.append("1\t");
       for (Writable item : itemset) {
-        shortFIsOut.print(((IntWritable) item).get() + " ");
+        builder.append(((IntWritable) item).get());
+        builder.append("|");
       }
       
       final Writable[] support = iaw[1].get();
-      shortFIsOut.println("(" + ((IntWritable) support[0]).get() + ")");
+      shortFIsOut.println(builder.substring(0, builder.length() - 1) + "(" + ((IntWritable) support[0]).get() + ")");
     }
   }
   
@@ -211,7 +215,7 @@ public class PrefixComputerReducer extends Reducer<Text,IntMatrixWritable,IntArr
   }
   
   private void createShortFIsFile(Configuration conf) throws IOException {
-    Path path = new Path(conf.getStrings(OUTPUT_DIR_KEY)[0] + Path.SEPARATOR + DistEclatDriver.OShortFIs);
+    Path path = new Path(conf.getStrings(OUTPUT_DIR_KEY)[0] + Path.SEPARATOR + OShortFIs + Path.SEPARATOR + OShortFIs);
     FileSystem fs = FileSystem.get(path.toUri(), new Configuration());
     shortFIsOut = new PrintStream(fs.create(path));
   }
