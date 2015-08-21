@@ -19,6 +19,7 @@ package be.uantwerpen.adrem.disteclat;
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsDistribution;
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsOrder;
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsTids;
+import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
@@ -99,6 +100,7 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
   public static final Text EmptyKey = new Text("");
   
   private int numberOfMappers;
+  private int minSup;
   private final Map<Integer,MutableInt> itemSupports = newHashMap();
   private MultipleOutputs<IntWritable,Writable> mos;
   
@@ -108,6 +110,7 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
     
     mos = new MultipleOutputs<IntWritable,Writable>(context);
     numberOfMappers = parseInt(conf.get(NUMBER_OF_MAPPERS_KEY, "1"));
+    minSup = conf.getInt(MIN_SUP_KEY, -1);
   }
   
   @Override
@@ -136,6 +139,15 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
     
     // should only get one, otherwise duplicated item in database
     for (Entry<Integer,IntArrayWritable[]> entry : map.entrySet()) {
+      int support = 0;
+      for (IntArrayWritable iaw : entry.getValue()) {
+        support += iaw.get().length;
+      }
+      if (support < minSup) {
+        itemSupports.remove(entry.getKey());
+        continue;
+      }
+      
       final Integer item = entry.getKey();
       final IntArrayWritable[] tids = entry.getValue();
       
