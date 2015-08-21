@@ -148,16 +148,10 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
       baseDir = dir.isEmpty() ? "tmp" : dir;
       
       Path path = new Path(context.getConfiguration().get("mapred.output.dir"));
-      FileSystem fs = path.getFileSystem(new Configuration());
+      FileSystem fs = path.getFileSystem(context.getConfiguration());
       
-      if (fs.listStatus(path).length > 0) {
-        dir = fs.getFileStatus(path).getPath().toString();
-        dir = dir.substring(dir.indexOf('/'), dir.length());// strip of file:/
-        
-        aprioriPhase = dir.substring(dir.lastIndexOf('/') + 1, dir.length());
-        int end = aprioriPhase.indexOf('-');
-        end = end > 0 ? end : aprioriPhase.length();
-        aprioriPhase = aprioriPhase.substring(2, end);
+      if (fs.getFileStatus(path) != null) {
+        aprioriPhase = fs.getFileStatus(path).getPath().getName().split("-")[0].substring(2);
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -224,14 +218,11 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     Map<String,MutableInt> supports = newHashMap();
     for (Text extensionAndSupport : values) {
       String[] split = extensionAndSupport.toString().split(" ");
-      String extension = split[0];
-      int localSup = Integer.parseInt(split[1]);
-      MutableInt support = supports.get(extension);
+      MutableInt support = supports.get(split[0]);
       if (support == null) {
-        support = new MutableInt(0);
-        supports.put(extension, support);
+        supports.put(split[0], support = new MutableInt(0));
       }
-      support.add(localSup);
+      support.add(parseInt(split[1]));
     }
     return supports;
   }
