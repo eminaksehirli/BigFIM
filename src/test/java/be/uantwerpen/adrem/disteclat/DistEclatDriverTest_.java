@@ -55,7 +55,8 @@ public class DistEclatDriverTest_ extends FIMTestCase {
     }
     distEclatHasRun = false;
     
-    final String shortFIsFileName = outputDir.getAbsoluteFile() + separator + DistEclatDriver.OShortFIs;
+    final String shortFIsFileName = outputDir.getAbsoluteFile() + separator + DistEclatDriver.OShortFIs + separator
+        + DistEclatDriver.OShortFIs;
     helper = new DriverTestHelper(DriverTestHelper.Length_2_FIs);
     
     results = readResults(shortFIsFileName);
