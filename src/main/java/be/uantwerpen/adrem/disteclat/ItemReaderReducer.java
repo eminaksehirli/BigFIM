@@ -116,6 +116,11 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
   @Override
   public void reduce(Text key, Iterable<IntArrayWritable> values, Context context)
       throws IOException, InterruptedException {
+    Map<Integer,IntArrayWritable[]> map = getPartitionTidListsPerExtension(values);
+    reportItemsWithLargeSupport(map);
+  }
+  
+  private Map<Integer,IntArrayWritable[]> getPartitionTidListsPerExtension(Iterable<IntArrayWritable> values) {
     Map<Integer,IntArrayWritable[]> map = newHashMap();
     for (IntArrayWritable iaw : values) {
       Writable[] w = iaw.get();
@@ -136,8 +141,11 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
       tidList[mapperId] = new IntArrayWritable(copy);
       itemSupports.get(item).add(w.length - 2);
     }
-    
-    // should only get one, otherwise duplicated item in database
+    return map;
+  }
+  
+  private void reportItemsWithLargeSupport(Map<Integer,IntArrayWritable[]> map)
+      throws IOException, InterruptedException {
     for (Entry<Integer,IntArrayWritable[]> entry : map.entrySet()) {
       int support = 0;
       for (IntArrayWritable iaw : entry.getValue()) {
@@ -154,7 +162,6 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
       // write the item with the tidlist
       mos.write(OSingletonsTids, new IntWritable(item), new IntMatrixWritable(tids));
     }
-    
   }
   
   @Override
