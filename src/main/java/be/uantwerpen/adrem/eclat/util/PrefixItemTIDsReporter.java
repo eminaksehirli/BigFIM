@@ -52,7 +52,6 @@ public class PrefixItemTIDsReporter implements SetReporter {
   public void report(int[] itemset, int support) {
     StringBuilder sb = new StringBuilder();
     if (itemset.length < prefixLength) {
-      // System.out.println("Found a short fis:" + Arrays.toString(itemset));
       try {
         context.write(ShortKey, new IntMatrixWritable(IntArrayWritable.of(itemset), IntArrayWritable.of(support)));
       } catch (Exception e) {
