@@ -131,15 +131,28 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     mos = new MultipleOutputs<Text,Writable>(context);
   }
   
-  private int getLargestIndex(Configuration conf, Path path, String prefix, int index) {
-    int largestIx = -1;
-    try {
-      FileSystem fs = path.getFileSystem(conf);
-      for (FileStatus file : fs.listStatus(path, new NameStartsWithFilter(prefix))) {
-        largestIx = max(largestIx, parseInt(file.getPath().getName().split("-")[index]));
-      }
-    } catch (NumberFormatException e) {} catch (IOException e) {}
-    return largestIx;
+  @Override
+  public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    Map<String,MutableInt> supports = getSupports(values);
+    removeLowSupports(supports);
+    
+    if (supports.isEmpty()) {
+      return;
+    }
+    
+    String prefix = key.toString();
+    
+    writeShortFis(prefix, supports);
+    if (!supports.isEmpty()) {
+      writeTrieGroup(prefix, supports);
+      updatePGInfo(prefix, supports);
+    }
+  }
+  
+  @Override
+  public void cleanup(Context context) throws IOException, InterruptedException {
+    updatePGCounters(context);
+    mos.close();
   }
   
   private void getBaseDirs(Context context) {
@@ -158,44 +171,59 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     }
   }
   
-  public int getMaxNumberOfCandidates(int n) {
-    int max = 0;
-    for (int i = n - 1; i > 0; i--) {
-      max += i;
-    }
-    return max;
+  private int getLargestIndex(Configuration conf, Path path, String prefix, int index) {
+    int largestIx = -1;
+    try {
+      FileSystem fs = path.getFileSystem(conf);
+      for (FileStatus file : fs.listStatus(path, new NameStartsWithFilter(prefix))) {
+        largestIx = max(largestIx, parseInt(file.getPath().getName().split("-")[index]));
+      }
+    } catch (NumberFormatException e) {} catch (IOException e) {}
+    return largestIx;
   }
   
-  @Override
-  public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-    Map<String,MutableInt> supports = getSupports(values);
-    removeLowSupports(supports);
-    
-    if (supports.isEmpty()) {
-      return;
+  private Map<String,MutableInt> getSupports(Iterable<Text> values) {
+    Map<String,MutableInt> supports = newHashMap();
+    for (Text extensionAndSupport : values) {
+      String[] split = extensionAndSupport.toString().split(" ");
+      getFromMap(supports, split[0]).add(parseInt(split[1]));
     }
-    
-    String prefix = key.toString();
-    
-    String baseOutputPath = null;
-    if (!supports.isEmpty()) {
-      baseOutputPath = baseDir + "/tg" + aprioriPhase + "/trieGroup-"
-          + (prefix.isEmpty() ? 0 : getOutputDirIx(prefix, supports));
-      updatePGInfo(prefix, supports);
+    return supports;
+  }
+  
+  private static MutableInt getFromMap(Map<String,MutableInt> map, String key) {
+    MutableInt i = map.get(key);
+    if (i == null) {
+      i = new MutableInt();
+      map.put(key, i);
     }
-    
-    System.out.println("Max number of candidates: " + getMaxNumberOfCandidates(supports.size()));
-    
+    return i;
+  }
+  
+  private void removeLowSupports(Map<String,MutableInt> supports) {
+    for (String extension : newHashSet(supports.keySet())) {
+      if (supports.get(extension).intValue() < minSup) {
+        supports.remove(extension);
+      }
+    }
+  }
+  
+  private void writeTrieGroup(String prefix, Map<String,MutableInt> supports) throws IOException, InterruptedException {
+    String baseOutputPath = createPath(baseDir, "tg" + aprioriPhase,
+        "trieGroup-" + (prefix.isEmpty() ? 0 : getOutputDirIx(prefix, supports)));
+    for (Entry<String,MutableInt> entry : supports.entrySet()) {
+      String itemset = prefix.isEmpty() ? entry.getKey() : prefix + " " + entry.getKey();
+      mos.write(new Text(itemset), new Text(entry.getValue().intValue() + ""), baseOutputPath);
+    }
+  }
+  
+  private void writeShortFis(String prefix, Map<String,MutableInt> supports) throws IOException, InterruptedException {
     StringBuilder builder = new StringBuilder();
     if (!prefix.isEmpty()) {
       builder.append(prefix.replace(" ", "|"));
       builder.append("|");
     }
     for (Entry<String,MutableInt> entry : supports.entrySet()) {
-      if (baseOutputPath != null) {
-        String itemset = prefix.isEmpty() ? entry.getKey() : prefix + " " + entry.getKey();
-        mos.write(new Text(itemset), new Text(entry.getValue().intValue() + ""), baseOutputPath);
-      }
       builder.append(entry.getKey());
       builder.append("(");
       builder.append(entry.getValue().intValue());
@@ -214,48 +242,12 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     return tgIndex;
   }
   
-  private Map<String,MutableInt> getSupports(Iterable<Text> values) {
-    Map<String,MutableInt> supports = newHashMap();
-    for (Text extensionAndSupport : values) {
-      String[] split = extensionAndSupport.toString().split(" ");
-      MutableInt support = supports.get(split[0]);
-      if (support == null) {
-        supports.put(split[0], support = new MutableInt(0));
-      }
-      support.add(parseInt(split[1]));
-    }
-    return supports;
-  }
-  
-  private void removeLowSupports(Map<String,MutableInt> supports) {
-    for (String extension : newHashSet(supports.keySet())) {
-      if (supports.get(extension).intValue() < minSup) {
-        supports.remove(extension);
-      }
-    }
-  }
-  
   private void updatePGInfo(String prefix, Map<String,MutableInt> supports) {
     int totSupport = 0;
     for (MutableInt support : supports.values()) {
       totSupport += support.intValue();
     }
-    getFromMap(prefix).add(totSupport);
-  }
-  
-  private MutableInt getFromMap(String key) {
-    MutableInt i = map.get(key);
-    if (i == null) {
-      i = new MutableInt();
-      map.put(key, i);
-    }
-    return i;
-  }
-  
-  @Override
-  public void cleanup(Context context) throws IOException, InterruptedException {
-    updatePGCounters(context);
-    mos.close();
+    getFromMap(map, prefix).add(totSupport);
   }
   
   private void updatePGCounters(Context context) {
@@ -269,5 +261,13 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     
     context.getCounter(COUNTER_GROUPNAME, COUNTER_NRPREFIXGROUPS).setValue(nrPG);
     context.getCounter(COUNTER_GROUPNAME, COUNTER_NRLARGEPREFIXGROUPS).setValue(largePG);
+  }
+  
+  private int getMaxNumberOfCandidates(int n) {
+    int max = 0;
+    for (int i = n - 1; i > 0; i--) {
+      max += i;
+    }
+    return max;
   }
 }
