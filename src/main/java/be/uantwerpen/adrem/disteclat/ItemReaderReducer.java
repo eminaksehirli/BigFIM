@@ -16,9 +16,12 @@
  */
 package be.uantwerpen.adrem.disteclat;
 
+import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OShortFIs;
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsDistribution;
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsOrder;
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OSingletonsTids;
+import static be.uantwerpen.adrem.hadoop.util.Tools.createPath;
+import static be.uantwerpen.adrem.hadoop.util.Tools.getJobAbsoluteOutputDir;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
 import static com.google.common.collect.Lists.newArrayList;
@@ -104,6 +107,8 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
   private final Map<Integer,MutableInt> itemSupports = newHashMap();
   private MultipleOutputs<IntWritable,Writable> mos;
   
+  private String shortFisFilename;
+  
   @Override
   public void setup(Context context) {
     Configuration conf = context.getConfiguration();
@@ -111,13 +116,15 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
     mos = new MultipleOutputs<IntWritable,Writable>(context);
     numberOfMappers = parseInt(conf.get(NUMBER_OF_MAPPERS_KEY, "1"));
     minSup = conf.getInt(MIN_SUP_KEY, -1);
+    
+    shortFisFilename = createPath(getJobAbsoluteOutputDir(context), OShortFIs, OShortFIs + "-1");
   }
   
   @Override
   public void reduce(Text key, Iterable<IntArrayWritable> values, Context context)
       throws IOException, InterruptedException {
     Map<Integer,IntArrayWritable[]> map = getPartitionTidListsPerExtension(values);
-    reportItemsWithLargeSupport(map);
+    reportItemsWithLargeSupport(map, context);
   }
   
   private Map<Integer,IntArrayWritable[]> getPartitionTidListsPerExtension(Iterable<IntArrayWritable> values) {
@@ -144,7 +151,7 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
     return map;
   }
   
-  private void reportItemsWithLargeSupport(Map<Integer,IntArrayWritable[]> map)
+  private void reportItemsWithLargeSupport(Map<Integer,IntArrayWritable[]> map, Context context)
       throws IOException, InterruptedException {
     for (Entry<Integer,IntArrayWritable[]> entry : map.entrySet()) {
       int support = 0;
@@ -158,6 +165,9 @@ public class ItemReaderReducer extends Reducer<Text,IntArrayWritable,IntWritable
       
       final Integer item = entry.getKey();
       final IntArrayWritable[] tids = entry.getValue();
+      
+      // write the item to the short fis file
+      mos.write(new IntWritable(1), new Text(item + "(" + support + ")"), shortFisFilename);
       
       // write the item with the tidlist
       mos.write(OSingletonsTids, new IntWritable(item), new IntMatrixWritable(tids));

@@ -10,6 +10,7 @@ public class FIMOptions {
   public static final String PREFIX_LENGTH_KEY = "prefix_length";
   public static final String SUBDB_SIZE = "sub_db_size";
   public static final String DELIMITER_KEY = "delimiter";
+  public static final String DEBUG_KEY = "debug";
   
   public String inputFile = "";
   public String outputDir = "";
@@ -17,6 +18,7 @@ public class FIMOptions {
   public int prefixLength = 1;
   public int nrMappers = -1;
   public String delimiter = " ";
+  public boolean debug = false;
   
   public boolean parseOptions(String args[]) {
     if (args.length % 2 != 0) {
@@ -35,6 +37,8 @@ public class FIMOptions {
         nrMappers = Integer.parseInt(args[i + 1]);
       } else if (args[i].equals("-d") || args[i].equals("--delimiter")) {
         delimiter = args[i + 1];
+      } else if (args[i].equals("--debug")) {
+        debug = args[i + 1].equals("true");
       }
     }
     
@@ -47,8 +51,8 @@ public class FIMOptions {
   
   @Override
   public String toString() {
-    return "FIMOptions [inputFile=" + inputFile + ", outputPath=" + outputDir + ", minSup=" + minSup
-        + ", prefixLength=" + prefixLength + ", nrMappers=" + nrMappers + ", delimiter=" + delimiter + "]";
+    return "FIMOptions [inputFile=" + inputFile + ", outputPath=" + outputDir + ", minSup=" + minSup + ", prefixLength="
+        + prefixLength + ", nrMappers=" + nrMappers + ", delimiter=" + delimiter + ", debug=" + debug + "]";
   }
   
   public void printHelp() {
@@ -68,7 +72,9 @@ public class FIMOptions {
     System.out.println("\t--Number of Mappers (-m) Number of Mappers");
     System.out.println("\t\tNumber of mappers to use");
     System.out.println("\t--Delimiter (-d) Delimiter");
-    System.out.println("\t\tItem delimiter in the data file ");
+    System.out.println("\t\tItem delimiter in the data file");
+    System.out.println("\t--debug");
+    System.out.println("\t\tEnables debug mode, keeping all intermediately created directories");
     System.out.println("\t--help (-h)");
     System.out.println("\t\tPrint out help");
   }

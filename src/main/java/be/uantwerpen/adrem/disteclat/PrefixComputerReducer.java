@@ -19,9 +19,10 @@ package be.uantwerpen.adrem.disteclat;
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OShortFIs;
 import static be.uantwerpen.adrem.hadoop.util.IntArrayWritable.EmptyIaw;
 import static be.uantwerpen.adrem.hadoop.util.IntMatrixWritable.EmptyImw;
+import static be.uantwerpen.adrem.hadoop.util.Tools.createPath;
+import static be.uantwerpen.adrem.hadoop.util.Tools.getJobAbsoluteOutputDir;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
-import static be.uantwerpen.adrem.util.FIMOptions.OUTPUT_DIR_KEY;
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
 import static com.google.common.collect.Maps.newHashMap;
 
@@ -109,7 +110,7 @@ public class PrefixComputerReducer extends Reducer<Text,IntMatrixWritable,IntArr
   public void setup(Context context) throws IOException {
     Configuration conf = context.getConfiguration();
     
-    createShortFIsFile(conf);
+    createShortFIsFile(context);
     
     minSup = conf.getInt(MIN_SUP_KEY, 1);
     int numberOfMappers = conf.getInt(NUMBER_OF_MAPPERS_KEY, 1);
@@ -119,7 +120,6 @@ public class PrefixComputerReducer extends Reducer<Text,IntMatrixWritable,IntArr
     }
     
     mos = new MultipleOutputs<IntArrayWritable,IntMatrixWritable>(context);
-    
   }
   
   @Override
@@ -214,9 +214,9 @@ public class PrefixComputerReducer extends Reducer<Text,IntMatrixWritable,IntArr
     mos.write(EmptyIaw, EmptyImw, baseOutputPath);
   }
   
-  private void createShortFIsFile(Configuration conf) throws IOException {
-    Path path = new Path(conf.getStrings(OUTPUT_DIR_KEY)[0] + Path.SEPARATOR + OShortFIs + Path.SEPARATOR + OShortFIs);
-    FileSystem fs = FileSystem.get(path.toUri(), new Configuration());
+  private void createShortFIsFile(Context context) throws IOException {
+    Path path = new Path(createPath(getJobAbsoluteOutputDir(context), OShortFIs, OShortFIs));
+    FileSystem fs = path.getFileSystem(context.getConfiguration());
     shortFIsOut = new PrintStream(fs.create(path));
   }
   

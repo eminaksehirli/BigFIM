@@ -16,9 +16,14 @@
  */
 package be.uantwerpen.adrem.hadoop.util;
 
+import static be.uantwerpen.adrem.util.FIMOptions.OUTPUT_DIR_KEY;
+import static com.google.common.collect.Sets.newHashSet;
+
 import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
@@ -27,6 +32,9 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.Reducer.Context;
+
+import be.uantwerpen.adrem.util.FIMOptions;
 
 /**
  * Some extra utility functions for Hadoop.
@@ -40,7 +48,7 @@ public class Tools {
    *          the files to delete
    */
   public static void cleanDirs(String... files) {
-    System.out.println("[Cleaning]: Cleaning HDFS before running Eclat");
+    System.out.println("[Cleaning]: Cleaning HDFS");
     Configuration conf = new Configuration();
     for (String filename : files) {
       System.out.println("[Cleaning]: Trying to delete " + filename);
@@ -101,5 +109,48 @@ public class Tools {
     jobConf.set("mapred.output.dir", outputPath.toString());
     
     return job;
+  }
+  
+  public static String getJobAbsoluteOutputDir(@SuppressWarnings("rawtypes") Context context) {
+    try {
+      Path path = new Path(context.getConfiguration().get(OUTPUT_DIR_KEY));
+      FileSystem fs = path.getFileSystem(context.getConfiguration());
+      return fs.getFileStatus(path).getPath().toString();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return "";
+  }
+  
+  public static String createPath(String... parts) {
+    StringBuilder path = new StringBuilder();
+    for (String part : parts) {
+      path.append(part);
+      path.append(Path.SEPARATOR);
+    }
+    return path.substring(0, path.length() - 1);
+  }
+  
+  public static void cleanupAfterJob(FIMOptions opt) {
+    if (!opt.debug) {
+      cleanupSubdirsExcept(opt.outputDir, newHashSet("fis", "shortfis"));
+    }
+  }
+  
+  public static void cleanupSubdirsExcept(String dir, Collection<String> toKeep) {
+    Path path = new Path(dir);
+    try {
+      for (FileStatus fs : path.getFileSystem(new Configuration()).listStatus(path)) {
+        String[] sp = fs.getPath().toString().split(Path.SEPARATOR);
+        String filename = sp[sp.length - 1];
+        if (toKeep.contains(filename)) {
+          cleanDirs(fs.getPath().toString() + Path.SEPARATOR + "_SUCCESS");
+          continue;
+        }
+        cleanDirs(fs.getPath().toString());
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }

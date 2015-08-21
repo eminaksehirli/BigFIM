@@ -20,6 +20,7 @@ import static be.uantwerpen.adrem.bigfim.AprioriPhaseReducer.COUNTER_GROUPNAME;
 import static be.uantwerpen.adrem.bigfim.AprioriPhaseReducer.COUNTER_NRLARGEPREFIXGROUPS;
 import static be.uantwerpen.adrem.hadoop.util.SplitByKTextInputFormat.NUMBER_OF_CHUNKS;
 import static be.uantwerpen.adrem.hadoop.util.Tools.cleanDirs;
+import static be.uantwerpen.adrem.hadoop.util.Tools.cleanupAfterJob;
 import static be.uantwerpen.adrem.hadoop.util.Tools.prepareJob;
 import static be.uantwerpen.adrem.util.FIMOptions.DELIMITER_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
@@ -96,6 +97,7 @@ public class BigFIMDriver implements Tool {
     } else {
       System.out.println("[BigFIM]: No prefixes to extend further");
     }
+    cleanupAfterJob(opt);
     long end = System.currentTimeMillis();
     
     System.out.println("[BigFIM]: Total time: " + (end - start) / 1000 + "s");
