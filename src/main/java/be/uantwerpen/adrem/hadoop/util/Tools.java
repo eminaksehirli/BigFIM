@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
@@ -149,6 +150,20 @@ public class Tools {
       }
     } catch (IOException e) {
       e.printStackTrace();
+    }
+  }
+  
+  public static class NameStartsWithFilter implements PathFilter {
+    
+    private final String prefix;
+    
+    public NameStartsWithFilter(String prefix) {
+      this.prefix = prefix;
+    }
+    
+    @Override
+    public boolean accept(Path path) {
+      return path.getName().startsWith(prefix);
     }
   }
 }

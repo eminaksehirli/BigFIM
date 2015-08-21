@@ -16,15 +16,18 @@
  */
 package be.uantwerpen.adrem.bigfim;
 
+import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OShortFIs;
+import static be.uantwerpen.adrem.hadoop.util.Tools.createPath;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.Integer.parseInt;
+import static java.lang.Math.max;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -34,6 +37,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
+
+import be.uantwerpen.adrem.hadoop.util.Tools.NameStartsWithFilter;
 
 /**
  * Reducer class for Apriori phase of BigFIM. This reducer combines the supports of length+1 candidates from different
@@ -117,86 +122,53 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
     
     minSup = conf.getInt(MIN_SUP_KEY, 1);
     
-    getBaseDirs(conf);
-    getTgIndex(conf);
-    getFisIndex(conf);
-    baseOutputPathFis = baseDir + "/shortfis/fis-" + aprioriPhase + "-" + fisIndex;
+    getBaseDirs(context);
+    tgIndex = getLargestIndex(conf, new Path(createPath(baseDir, "tg" + aprioriPhase)), "trieGroup", 1) + 1;
+    fisIndex = getLargestIndex(conf, new Path(createPath(baseDir, OShortFIs)), "fis-" + aprioriPhase, 2) + 1;
+    baseOutputPathFis = createPath(baseDir, OShortFIs, "fis-" + aprioriPhase + "-" + fisIndex);
     
     mos = new MultipleOutputs<Text,Writable>(context);
   }
   
-  private void getTgIndex(Configuration conf) {
+  private int getLargestIndex(Configuration conf, Path path, String prefix, int index) {
+    int largestIx = -1;
     try {
-      Path path = new Path(baseDir + "/tg" + aprioriPhase);
-      FileSystem fs = path.getFileSystem(new Configuration());
-      
-      if (!fs.exists(path)) {
-        tgIndex = 0;
-        return;
+      FileSystem fs = path.getFileSystem(conf);
+      for (FileStatus file : fs.listStatus(path, new NameStartsWithFilter(prefix))) {
+        largestIx = max(largestIx, parseInt(file.getPath().getName().split("-")[index]));
       }
-      
-      int largestIx = 0;
-      for (FileStatus file : fs.listStatus(path)) {
-        String tmp = file.getPath().toString();
-        if (!tmp.contains("trieGroup")) {
-          continue;
-        }
-        tmp = tmp.substring(tmp.lastIndexOf('/'), tmp.length());
-        int ix = Integer.parseInt(tmp.split("-")[1]);
-        tgIndex = Math.max(largestIx, ix) + 1;
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    } catch (NumberFormatException e) {} catch (IOException e) {}
+    return largestIx;
   }
   
-  private void getFisIndex(Configuration conf) {
+  private void getBaseDirs(Context context) {
     try {
-      Path path = new Path(baseDir + "/smallfis");
-      FileSystem fs = path.getFileSystem(new Configuration());
+      String dir = be.uantwerpen.adrem.hadoop.util.Tools.getJobAbsoluteOutputDir(context);
+      baseDir = dir.isEmpty() ? "tmp" : dir;
       
-      if (!fs.exists(path)) {
-        fisIndex = 0;
-        return;
-      }
-      
-      int largestIx = 0;
-      for (FileStatus file : fs.listStatus(path)) {
-        String tmp = file.getPath().toString();
-        if (!tmp.contains("fis")) {
-          continue;
-        }
-        tmp = tmp.substring(tmp.lastIndexOf('/'), tmp.length());
-        int ix = Integer.parseInt(tmp.split("-")[2]);
-        fisIndex = Math.max(largestIx, ix) + 1;
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-  
-  private void getBaseDirs(Configuration conf) {
-    try {
-      Path path = new Path(conf.get("mapred.output.dir"));
+      Path path = new Path(context.getConfiguration().get("mapred.output.dir"));
       FileSystem fs = path.getFileSystem(new Configuration());
       
       if (fs.listStatus(path).length > 0) {
-        String dir = fs.listStatus(path)[0].getPath().toString();
+        dir = fs.getFileStatus(path).getPath().toString();
         dir = dir.substring(dir.indexOf('/'), dir.length());// strip of file:/
-        dir = dir.substring(0, dir.lastIndexOf("/_temporary"));// strip of _temporary
         
         aprioriPhase = dir.substring(dir.lastIndexOf('/') + 1, dir.length());
         int end = aprioriPhase.indexOf('-');
         end = end > 0 ? end : aprioriPhase.length();
         aprioriPhase = aprioriPhase.substring(2, end);
-        
-        baseDir = dir.substring(0, dir.lastIndexOf('/'));
-      } else {
-        baseDir = "tmp";
       }
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+  
+  public int getMaxNumberOfCandidates(int n) {
+    int max = 0;
+    for (int i = n - 1; i > 0; i--) {
+      max += i;
+    }
+    return max;
   }
   
   @Override
@@ -217,24 +189,33 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
       updatePGInfo(prefix, supports);
     }
     
-    for (Entry<String,MutableInt> entry : supports.entrySet()) {
-      String itemset = prefix.isEmpty() ? entry.getKey() : prefix + " " + entry.getKey();
-      Text textItemset = new Text(itemset);
-      Text textSupport = new Text(entry.getValue().intValue() + "");
-      if (baseOutputPath != null) {
-        mos.write(textItemset, textSupport, baseOutputPath);
-      }
-      mos.write(textItemset, textSupport, baseOutputPathFis);
+    System.out.println("Max number of candidates: " + getMaxNumberOfCandidates(supports.size()));
+    
+    StringBuilder builder = new StringBuilder();
+    if (!prefix.isEmpty()) {
+      builder.append(prefix.replace(" ", "|"));
+      builder.append("|");
     }
+    for (Entry<String,MutableInt> entry : supports.entrySet()) {
+      if (baseOutputPath != null) {
+        String itemset = prefix.isEmpty() ? entry.getKey() : prefix + " " + entry.getKey();
+        mos.write(new Text(itemset), new Text(entry.getValue().intValue() + ""), baseOutputPath);
+      }
+      builder.append(entry.getKey());
+      builder.append("(");
+      builder.append(entry.getValue().intValue());
+      builder.append(")$");
+    }
+    mos.write(new Text("" + supports.size()), new Text(builder.substring(0, builder.length() - 1)), baseOutputPathFis);
   }
   
   private int getOutputDirIx(String prefix, Map<String,MutableInt> supports) {
-    int size = (StringUtils.countMatches(prefix, " ") + 2) * supports.size();
-    currTrieGroupSize += size;
-    if (currTrieGroupSize > MAXCANDIDATESSIZE) {
-      currTrieGroupSize = size;
+    int size = getMaxNumberOfCandidates(supports.size());
+    if (currTrieGroupSize != 0 && currTrieGroupSize + size > MAXCANDIDATESSIZE) {
+      currTrieGroupSize = 0;
       tgIndex++;
     }
+    currTrieGroupSize += size;
     return tgIndex;
   }
   
