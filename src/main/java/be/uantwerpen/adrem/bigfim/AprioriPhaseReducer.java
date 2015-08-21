@@ -18,6 +18,7 @@ package be.uantwerpen.adrem.bigfim;
 
 import static be.uantwerpen.adrem.disteclat.DistEclatDriver.OShortFIs;
 import static be.uantwerpen.adrem.hadoop.util.Tools.createPath;
+import static be.uantwerpen.adrem.hadoop.util.Tools.getJobAbsoluteOutputDir;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
@@ -143,7 +144,7 @@ public class AprioriPhaseReducer extends Reducer<Text,Text,Text,Writable> {
   
   private void getBaseDirs(Context context) {
     try {
-      String dir = be.uantwerpen.adrem.hadoop.util.Tools.getJobAbsoluteOutputDir(context);
+      String dir = getJobAbsoluteOutputDir(context);
       baseDir = dir.isEmpty() ? "tmp" : dir;
       
       Path path = new Path(context.getConfiguration().get("mapred.output.dir"));

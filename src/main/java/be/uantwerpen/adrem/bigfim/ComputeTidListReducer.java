@@ -18,6 +18,8 @@ package be.uantwerpen.adrem.bigfim;
 
 import static be.uantwerpen.adrem.hadoop.util.IntArrayWritable.EmptyIaw;
 import static be.uantwerpen.adrem.hadoop.util.IntMatrixWritable.EmptyImw;
+import static be.uantwerpen.adrem.hadoop.util.Tools.createPath;
+import static be.uantwerpen.adrem.hadoop.util.Tools.getJobAbsoluteOutputDir;
 import static be.uantwerpen.adrem.util.FIMOptions.MIN_SUP_KEY;
 import static be.uantwerpen.adrem.util.FIMOptions.NUMBER_OF_MAPPERS_KEY;
 import static com.google.common.collect.Lists.newArrayListWithCapacity;
@@ -144,8 +146,8 @@ public class ComputeTidListReducer extends Reducer<Text,IntArrayWritable,IntArra
   }
   
   private void getBasePGDir(Context context) {
-    String dir = be.uantwerpen.adrem.hadoop.util.Tools.getJobAbsoluteOutputDir(context);
-    basePGDir = dir.isEmpty() ? "pg" : be.uantwerpen.adrem.hadoop.util.Tools.createPath(dir, "pg");
+    String dir = getJobAbsoluteOutputDir(context);
+    basePGDir = dir.isEmpty() ? "pg" : createPath(dir, "pg");
   }
   
   private void getPgStartIndex(Configuration conf) {
