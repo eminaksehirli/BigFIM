@@ -56,7 +56,7 @@ More sample datasets can be found on [fimi repository][fimi].
 If you haven't already started the HDFS and Hadoop, you can do so by executing the
 following commands. **WARNING:** The following commands will delete everything 
 on HDFS. Only use them if you are working on a stand-alone installation which 
-is not used as a production environment, and there is absolutely no important data 
+is not used as a production environment and there is absolutely no important data 
 on HDFS. If you only want to start the cluster, use only the second command.
 
     $HADOOP_PREFIX/bin/hadoop namenode -format
